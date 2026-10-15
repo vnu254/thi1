@@ -789,13 +789,25 @@
     // =========================================================================
     // 1. BỘ DỰNG ĐỒ HỌA VECTOR (SVG ENGINE) ĐA DẠNG CHO CÂU HỎI CÓ HÌNH
     // =========================================================================
-    function renderSignSVG(type, label = "") {
-      return "";
-    }
-
-    function getVisualHTMLForQuestion(qId) {
-      return "";
-    }
+   function getVisualHTMLForQuestion(qId) {
+  // Tìm câu hỏi trong ngân hàng theo ID
+  const qObj = VERBATIM_QUESTIONS.find(item => item.id === Number(qId));
+  
+  // Kiểm tra nếu câu hỏi không có ảnh
+  if (!qObj || !qObj.hasVisual) return "";
+  
+  // Lấy tên file ảnh từ thuộc tính image hoặc tự tạo theo id
+  const imgFile = qObj.image ? qObj.image.trim() : `cau_${qId}.jpg`;
+  
+  return `
+    <img 
+      src="${imgFile}" 
+      alt="Hình minh họa câu ${qId}" 
+      class="max-h-72 sm:max-h-80 w-auto object-contain rounded-xl shadow-sm border border-slate-200 mx-auto"
+      onerror="this.onerror=null; this.outerHTML='<div class=\\'p-3 text-xs text-red-600 font-bold bg-red-50 rounded-lg border border-red-200\\'><i class=\\'fa-solid fa-triangle-exclamation mr-1\\'></i> Không tìm thấy file ảnh: ${imgFile}</div>';"
+    />
+  `;
+}
     // =========================================================================
     // 2. NGÂN HÀNG 600 CÂU HỎI SÁT HẠCH CỤC CSGT - BỘ CÔNG AN (2025)
     // =========================================================================
