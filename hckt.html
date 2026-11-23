@@ -1,0 +1,2216 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kiểm tra nhận thức Hậu cần – Kỹ thuật 2026</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f0f4f6;color:#142e38;font:1rem/1.5 system-ui,sans-serif}main{max-width:900px;margin:auto;padding:32px 16px}h1{margin:0;font-size:clamp(1.8rem,5vw,2.7rem);line-height:1.15}h2{font-size:1.2rem;margin:0 0 16px}.panel{background:#fff;border:1px solid #cfdae0;border-radius:16px;padding:clamp(14px,4vw,26px);margin-top:18px}.bar,.actions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.muted{color:#4a626d}.track{width:100%;height:8px;accent-color:#126b60;margin:12px 0 22px}fieldset{margin:0;padding:0;border:0;min-width:0}legend{font:italic bold 1.3rem/1.4 Georgia,serif;margin-bottom:14px;width:100%}label.option{display:flex;align-items:baseline;gap:12px;padding:12px;border:1px solid #cbd7de;border-radius:8px;margin:8px 0;cursor:pointer}label:has(:checked){background:#e5f2f0;border-color:#438a82}.option.correct{background:#e5f5e8;border-color:#39854c}.option.wrong{background:#fce9e7;border-color:#aa4d46}.mark{margin-left:auto;font-weight:700;text-align:right}input[type=radio]{accent-color:#126b60}button,select{font:inherit;border:1px solid #a8bac3;border-radius:8px;padding:8px 12px;color:inherit;background:white}button{cursor:pointer}button.primary{background:#126b60;color:white;border-color:#126b60}button:disabled{opacity:.48;cursor:default}.actions{margin-top:18px;justify-content:flex-start}summary{cursor:pointer;font-weight:700}textarea{display:block;width:100%;min-height:195px;padding:10px;font:inherit;margin:10px 0;border:1px solid #a8bac3;border-radius:8px}pre{white-space:pre-wrap;background:#f0f4f6;padding:12px;border-radius:8px}output{display:block;font-weight:700;margin-top:10px}#result:empty,#message:empty{display:none}#message.error{color:#a52c27}
+button, select, summary { min-height: 44px; }
+summary { align-content: center; }
+:focus-visible { outline: 3px solid #126b60; outline-offset: 3px; }
+label.option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  min-height: 52px;
+}
+.option input { width: 19px; height: 19px; margin: 3px 0 0; }
+.option span, legend, pre { overflow-wrap: anywhere; }
+.option .mark { grid-column: 2; margin: 0; text-align: left; }
+input[type=file] { max-width: 100%; font: inherit; }
+input[type=file]::file-selector-button { min-height: 44px; font: inherit; }
+button, select, summary, .option { touch-action: manipulation; }
+@media (max-width: 600px) {
+  main {
+    padding: calc(18px + env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      calc(20px + env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+  }
+  header p { margin: 6px 0 0; }
+  .panel { margin-top: 12px; padding: 12px; border-radius: 12px; }
+  .quiz { display: flex; flex-direction: column; min-height: min(68svh, 520px); }
+  .bar { gap: 8px; }
+  .bar label { display: flex; align-items: center; gap: 6px; }
+  select { min-width: 4rem; }
+  .track { flex: none; margin: 8px 0 14px; }
+  legend { font-size: 1.22rem; margin-bottom: 8px; scroll-margin-top: 12px; }
+  label.option { padding: 13px 12px; }
+  .quiz-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    margin: auto -12px -12px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: #fff;
+    border-top: 1px solid #cfdae0;
+    border-radius: 0 0 12px 12px;
+  }
+  .quiz-actions button { min-height: 48px; padding-inline: 6px; }
+  #options { padding-bottom: 8px; }
+  #result { margin-bottom: 12px; }
+}
+.modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.modes button { min-height: 48px; }
+.modes button[aria-pressed=true] { background: #126b60; border-color: #126b60; color: white; font-weight: 700; }
+#modeHint { margin: 8px 0 0; }
+#feedback { scroll-margin-top: 12px; }
+#feedback:empty { display: none; }
+</style>
+<main>
+<header><h1>Kiểm tra nhận thức Hậu cần – Kỹ thuật 2026</h1><p class="muted" id="bank"></p></header>
+<section class="panel" aria-label="Chế độ làm bài">
+<div class="modes">
+  <button id="practiceMode" type="button" aria-pressed="false">Kiểm tra</button>
+  <button id="examMode" type="button" aria-pressed="true">Thi</button>
+</div>
+<p class="muted" id="modeHint"></p>
+</section>
+<section class="panel quiz" aria-label="Bài làm">
+<div class="bar"><span id="progressText"></span><label>Đến câu <select id="jump" aria-label="Đến câu"></select></label></div>
+<progress class="track" id="progress" aria-label="Tiến độ bài làm"></progress>
+<fieldset id="question"><legend id="prompt" tabindex="-1"></legend><div id="options"></div></fieldset>
+<output id="feedback" aria-live="polite" tabindex="-1"></output>
+<output id="result" aria-live="polite"></output>
+<div class="actions quiz-actions"><button id="previous">Câu trước</button><button id="next">Câu sau</button><button class="primary" id="submit">Nộp bài</button><button id="reset">Làm lại</button></div>
+</section>
+
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const bank = [
+  {
+    "prompt": "Nghị quyết 1656-NQ/QUTW của Quân ủy Trung ương về “Lãnh đạo CTKT đến năm 2030 và những năm tiếp theo” ban hành ngày tháng năm nào?",
+    "id": "1",
+    "correct": 0,
+    "options": [
+      "Ngày 20/12/2022.",
+      "Ngày 21/12/2022.",
+      "Ngày 22/12/2022."
+    ]
+  },
+  {
+    "prompt": "Nghị quyết 1656-NQ/QUTW của Quân ủy Trung ương về “Lãnh đạo CTKT đến năm 2030 và những năm tiếp theo”xác định phương hướng CTKT đến năm 2030 và những năm tiếp theo như thế nào?",
+    "id": "2",
+    "correct": 2,
+    "options": [
+      "Xây dựng ngành kỹ thuật “vững mạnh, tinh gọn, thống nhất, đồng bộ”.",
+      "Xây dựng ngành kỹ thuật “vững mạnh, tinh gọn, thống nhất, đồng bộ và hiệu quả”.",
+      "Xây dựng ngành kỹ thuật “vững mạnh, tinh gọn, thống nhất, đồng bộ, hiệu quả, góp phần xây dựng Quân đội hiện đại”."
+    ]
+  },
+  {
+    "prompt": "Nghị quyết 1656-NQ/QUTWcủa Quân ủy Trung ương về “Lãnh đạo CTKT đến năm 2030 và những năm tiếp theo” có bao nhiêu quan điểm chỉ đạo?",
+    "id": "3",
+    "correct": 1,
+    "options": [
+      "3 quan điểm.",
+      "4 quan điểm.",
+      "5 quan điểm."
+    ]
+  },
+  {
+    "prompt": "Nghị quyết 1656-NQ/QUTW của Quân ủy Trung ương về “Lãnh đạo CTKT đến năm 2030 và những năm tiếp theo” gồm bao nhiêu nhiệm vụ và giải pháp chính?",
+    "id": "4",
+    "correct": 2,
+    "options": [
+      "7 nhiệm vụ và giải pháp chính.",
+      "8 nhiệm vụ và giải pháp chính.",
+      "9 nhiệm vụ và giải pháp chính."
+    ]
+  },
+  {
+    "prompt": "Theo Nghị quyết 1656-NQ/QUTW của Quân ủy Trung ương thì mục tiêu đến năm 2030 xây dựng đội ngũ cán bộ, nhân viên kỹ thuật như thế nào?",
+    "id": "5",
+    "correct": 2,
+    "options": [
+      "Có cơ cấu hợp lý, đủ về số lượng, chất lượng cao, phù hợp với tổ chức lực lượng và lộ trình hiện đại hóa Quân đội.",
+      "Có cơ cấu hợp lý, đủ về số lượng, chất lượng cao, phù hợp với tổ chức lực lượng.",
+      "Có chất lượng cao, đáp ứng mục tiêu xây dựng Quân đội hiện đại."
+    ]
+  },
+  {
+    "prompt": "Theo Nghị quyết 1656-NQ/QUTW của Quân ủy Trung ương thì mục tiêu giai đoạn 2030 và những năm tiếp theo xây dựng đội ngũ cán bộ, nhân viên kỹ thuật như thế nào?",
+    "id": "6",
+    "correct": 0,
+    "options": [
+      "Có cơ cấu hợp lý, đủ về số lượng, chất lượng cao, phù hợp với tổ chức lực lượng và lộ trình  hiện đại hóa Quân đội.",
+      "Có cơ cấu hợp lý, đủ về số lượng, chất lượng cao, phù hợp với tổ chức lực lượng.",
+      "Có chất lượng cao, đáp ứng mục tiêu xây dựng Quân đội hiện đại."
+    ]
+  },
+  {
+    "prompt": "Trưởng ban chỉ đạo PTTĐ “Ngành hậu cần Quân đội làm theo lời Bác Hồ dạy “ và CVĐ50 Sư đoàn là đồng chí nào?",
+    "id": "7",
+    "correct": 2,
+    "options": [
+      "Đ/c Sư đoàn trưởng.",
+      "Đ/c Phó Sư đoàn trưởng - TMT.",
+      "Đ/c Phó Sư đoàn trưởng."
+    ]
+  },
+  {
+    "prompt": "Chủ tịch Hội đồng ATVSLĐ &PCBNN Sư đoàn là đồng chí nào?",
+    "id": "8",
+    "correct": 2,
+    "options": [
+      "Đ/c Sư đoàn trưởng.",
+      "Đ/c Phó Sư đoàn trưởng - TMT.",
+      "Đ/c Phó Sư đoàn trưởng."
+    ]
+  },
+  {
+    "prompt": "Quyết định số 87/QĐ-TTg của Thủ tướng chính phủ chọn tháng 5 hằng năm là “tháng hành động về an toàn, vệ sinh lao động” ban hành ngày, tháng, năm nào?",
+    "id": "9",
+    "correct": 0,
+    "options": [
+      "Ngày 12/01/2016.",
+      "Ngày 22/6/2015.",
+      "Ngày 29/12/2016."
+    ]
+  },
+  {
+    "prompt": "Thông tư nào của Bộ Quốc phòng quy định việc khai báo, điều tra, thống kế và báo cáo tai nạn lao động trong Bộ Quốc phòng?",
+    "id": "10",
+    "correct": 1,
+    "options": [
+      "Thông tư số 01/2017/TT-BQP ngày 04/1/2017.",
+      "Thông tư số 02/2017/TT-BQP ngày 05/1/2017.",
+      "Thông tư số 08/2017/TT-BQP ngày 06/1/2017."
+    ]
+  },
+  {
+    "prompt": "Thông tư nào của Bộ Quốc phòng quy định về hoạt động huấn luyện an toàn, vệ sinh lao động trong Bộ Quốc phòng?",
+    "id": "11",
+    "correct": 1,
+    "options": [
+      "Thông tư số 01/2017/TT-BQP ngày 04/1/2017.",
+      "Thông tư số 02/2017/TT-BQP ngày 05/1/2017.",
+      "Thông tư số 08/2017/TT-BQP ngày 06/1/2017."
+    ]
+  },
+  {
+    "prompt": "Nghị định số 37/2016/NĐ-CP ngày 15/5/2016 quy định chi tiết và hướng dẫn thi hành một số điều của luật an toàn, vệ sinh lao động về bảo hiểm tai nạn lao động, bệnh nghề nghiệp bắt buộc; gồm 6 chương và 38 điều, có hiệu lực từ ngày 01/7/2016, gồm mất nội dung chính?",
+    "id": "12",
+    "correct": 2,
+    "options": [
+      "4 nội dung.",
+      "5 nội dung.",
+      "6 nội dung."
+    ]
+  },
+  {
+    "prompt": "Nghị định số 39/2016/NĐ-CP ngày 15/5/2016 quy định chi tiết thi hành một số điều của luật an toàn, vệ sinh lao động; gồm 7 chương và 48 điều, có hiệu lực từ ngày 01/7/2016, gồm mất nội dung chính?",
+    "id": "13",
+    "correct": 1,
+    "options": [
+      "4 nội dung.",
+      "5 nội dung.",
+      "6 nội dung."
+    ]
+  },
+  {
+    "prompt": "Nghị định số 44/2016/NĐ-CP ngày 15/5/2016 quy định chi tiết một số điều của luật an toàn, vệ sinh lao động về hoạt động kiểm định kỹ thuật an toàn; huấn luyện an toàn, vệ sinh lao động và quan trắc môi trường lao động; gồm 6 chương và 47 điều, có hiệu lực từ ngày 01/7/2016, gồm mất nội dung chính?",
+    "id": "14",
+    "correct": 1,
+    "options": [
+      "4 nội dung.",
+      "5 nội dung.",
+      "6 nội dung."
+    ]
+  },
+  {
+    "prompt": "Chỉ thị số 216 CT/QP của Bộ trưởng Bộ Quốc Phòng về việc phát động cuộc vận động “Quản lý, khai thác VKTBKT tốt, bền, an toàn, tiết kiệm và an toàn giao thông” trong Quân đội ban hành ngày tháng năm nào?",
+    "id": "15",
+    "correct": 0,
+    "options": [
+      "Ngày 14/3/1995.",
+      "Ngày 14/3/1996.",
+      "Ngày 14/3/1997."
+    ]
+  },
+  {
+    "prompt": "Cuộc vận động “Quản lý, khai thác VKTBKT tốt, bền, an toàn, tiết kiệm và an toàn giao thông” được bắt đầu tổ chức thực hiện từ khi nào?",
+    "id": "16",
+    "correct": 1,
+    "options": [
+      "Từ ngày 04/3/1995 theo chỉ thị 216/CT-QP của Bộ trưởng BQP.",
+      "Từ ngày 14/3/1996 theo chỉ thị 216/CT-QP của Bộ trưởng BQP.",
+      "Từ ngày 10/01/1998 theo chỉ thị 50/CT-QP của Bộ trưởng BQP."
+    ]
+  },
+  {
+    "prompt": "Cuộc vận động “Quản lý, khai thác VKTBKT tốt, bền, an toàn, tiết kiệm và an toàn giao thông” gồm bao nhiêu nội dung?",
+    "id": "17",
+    "correct": 1,
+    "options": [
+      "Có 3 nội dung.",
+      "Có 4 nôi dung.",
+      "Có 5 nội dung."
+    ]
+  },
+  {
+    "prompt": "Đối tượng thực hiện Cuộc vận động 50?",
+    "id": "18",
+    "correct": 1,
+    "options": [
+      "Mọi quân nhân, công nhân viên chức quốc phòng VKTB trong biên chế của Quân đội.",
+      "Mọi quân nhân, công nhân viên chức quốc phòng trong biên chế của Quân đội.",
+      "Cán bộ nhân viên chuyên môn kỹ thuật và VKTBKT trong biên chế của Quân đội."
+    ]
+  },
+  {
+    "prompt": "Các mục tiêu cuộc vận động “Quản lý, khai thác VKTBKT tốt, bền, an toàn, tiết kiệm và an toàn giao thông”?",
+    "id": "19",
+    "correct": 1,
+    "options": [
+      "Quản lý tốt; Khai thác vũ khí trang bị tốt, bền; an toàn; tiết kiệm.",
+      "Quản lý tốt; Khai thác vũ khí trang bị tốt, bền, an toàn, tiết kiệm và an toàn giao thong.",
+      "Quản lý tốt; Khai thác vũ khí trang bị tốt, bền; bảo đảm an toàn; thực hành tiết kiệm."
+    ]
+  },
+  {
+    "prompt": "Cuộc vận động “Quản lý, khai thác VKTBKT tốt, bền, an toàn, tiết kiệm và an toàn giao thông” gồm bao nhiêu nội dung?",
+    "id": "20",
+    "correct": 1,
+    "options": [
+      "Có 3 nội dung.",
+      "Có 4 nôi dung.",
+      "Có 5 nội dung."
+    ]
+  },
+  {
+    "prompt": "Mục tiêu “Quản lý tốt” của Cuộc vận động “Quản lý, khai thác VKTBKT tốt, bền, an toàn, tiết kiệm và an toàn giao thông” gồm bao nhiêu nội dung?",
+    "id": "21",
+    "correct": 1,
+    "options": [
+      "Có 3 nội dung.",
+      "Có 4 nôi dung.",
+      "Có 5 nội dung."
+    ]
+  },
+  {
+    "prompt": "Mục tiêu “Khai thác tốt, bền” của Cuộc vận động “Quản lý, khai thác VKTBKT tốt, bền, an toàn, tiết kiệm và an toàn giao thông” gồm bao nhiêu nội dung?",
+    "id": "22",
+    "correct": 1,
+    "options": [
+      "Có 3 nội dung.",
+      "Có 4 nôi dung.",
+      "Có 5 nội dung."
+    ]
+  },
+  {
+    "prompt": "Mục tiêu “Bảo đảm an toàn” của Cuộc vận động “Quản lý, khai thác VKTBKT tốt, bền, an toàn, tiết kiệm và an toàn giao thông” gồm bao nhiêu nội dung?",
+    "id": "23",
+    "correct": 1,
+    "options": [
+      "Có 3 nội dung.",
+      "Có 4 nôi dung.",
+      "Có 5 nội dung."
+    ]
+  },
+  {
+    "prompt": "Mục tiêu “Thực hành tiết kiệm” của Cuộc vận động “Quản lý, khai thác VKTBKT tốt, bền, an toàn, tiết kiệm và an toàn giao thông” gồm bao nhiêu nội dung?",
+    "id": "24",
+    "correct": 2,
+    "options": [
+      "Có 3 nội dung.",
+      "Có 4 nôi dung.",
+      "Có 5 nội dung."
+    ]
+  },
+  {
+    "prompt": "Trong chỉ thị của Bộ Quốc phòng đã quy định đơn vị cơ sở tổ chức sơ kết CVĐ50 và PTTĐ “Ngành hậu cần Quân đội làm theo lời Bác Hồ dạy” như thế nào?",
+    "id": "25",
+    "correct": 0,
+    "options": [
+      "Mỗi năm 1 lần kết hợp với Hội nghị Hậu cần - Kỹ thuật.",
+      "Hai năm 1 lần kết hợp với Hội nghị Hậu cần - Kỹ thuật..",
+      "Hai lần/ năm kết hợp với Hội nghị Hậu cần - Kỹ thuật."
+    ]
+  },
+  {
+    "prompt": "Trưởng ban chỉ đạo CVĐ50 và PTTĐ “Ngành hậu cần Quân đội làm theo lời Bác Hồ dạy” Sư đoàn là đồng chí nào?",
+    "id": "26",
+    "correct": 2,
+    "options": [
+      "Đ/c Sư đoàn trưởng.",
+      "Đ/c Phó Sư đoàn trưởng –TMT.",
+      "Đ/c Phó Sư đoàn trưởng."
+    ]
+  },
+  {
+    "prompt": "Thông tư số 06/2023/TT-BQP của Bộ Quốc phòng ban hành “Điều lệ Công tác kỹ thuật Quân đội nhân dân Việt Nam” ban hành ngày tháng năm nào?",
+    "id": "27",
+    "correct": 1,
+    "options": [
+      "Ngày 19/01/2023.",
+      "Ngày 20/01/2023.",
+      "Ngày 21/01/2023."
+    ]
+  },
+  {
+    "prompt": "Thông tư số 06/2023/TT-BQP của Bộ Quốc phòng ban hành “Điều lệ Công tác kỹ thuật Quân đội nhân dân Việt Nam” có hiệu lực từ ngày tháng năm nào?",
+    "id": "28",
+    "correct": 2,
+    "options": [
+      "Ngày 06/3/2023.",
+      "Ngày 15/3/2023.",
+      "Ngày 20/3/2023."
+    ]
+  },
+  {
+    "prompt": "Thông tư số 06/2023/TT-BQP của Bộ Quốc phòng ban hành “Điều lệ Công tác kỹ thuật Quân đội nhân dân Việt Nam” thay thế cho Quyết định số nào?",
+    "id": "29",
+    "correct": 0,
+    "options": [
+      "Quyết định số 57/2004/QĐ-BQP ngày 10/5/2004.",
+      "Quyết định số 58/2004/QĐ-BQP ngày 10/5/2004.",
+      "Quyết định số 59/2004/QĐ-BQP ngày 10/5/2004."
+    ]
+  },
+  {
+    "prompt": "Điều lệ Công tác kỹ thuật Quân đội nhân dân Việt Nam gồm mấy chương, bao nhiêu điều?",
+    "id": "30",
+    "correct": 0,
+    "options": [
+      "14 chương, 92 điều.",
+      "14 chương, 93 điều.",
+      "14 chương, 94 điều."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệ công tác kỹ thuật QĐNDVN; trang bị kỹ thuật được hiểu?",
+    "id": "31",
+    "correct": 1,
+    "options": [
+      "Là các loại vũ khí, tổ hợp vũ khí, đạn dược, phương tiện, khí tài dùng để chiến đấu, bảo đảm chiến đấu, huấn luyện và các hoạt động thường xuyên trong QĐNDVN.",
+      "Là các loại vũ khí, tổ hợp vũ khí, đạn dược, phương tiện, khí tài, vật tư dùng để chiến đấu, bảo đảm chiến đấu, huấn luyện và các hoạt động thường xuyên trong QĐNDVN.",
+      "Là các loại vũ khí, đạn dược, phương tiện, khí tài, vật tư dùng để chiến đấu, bảo đảm chiến đấu, huấn luyện và các hoạt động thường xuyên trong QĐNDVN."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệ công tác kỹ thuật QĐNDVN; vật tư kỹ thuật được hiểu?",
+    "id": "32",
+    "correct": 2,
+    "options": [
+      "Là các loại hàng hóa gồm nhiên liệu, vật liệu, chi tiết, cụm chi tiết, thiết bị, phụ tùng và một số loại phương tiện sử dụng cho hoạt động công tác kỹ thuật.",
+      "Là các loại hàng hóa gồm nguyên liệu, nhiên liệu, vật liệu, chi tiết, cụm chi tiết, thiết bị, phụ tùng và một số loại phương tiện sử dụng cho hoạt động công tác kỹ thuật.",
+      "Là các loại hàng hóa gồm nguyên liệu, nhiên liệu, vật liệu, chi tiết, cụm chi tiết, thiết bị, phụ tùng, đồng bộ và một số loại phương tiện sử dụng cho hoạt động công tác kỹ thuật."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệ công tác kỹ thuật QĐNDVN; khai thác trang bị kỹ thuật được hiểu?",
+    "id": "33",
+    "correct": 0,
+    "options": [
+      "Là hoạt động vận hành, khai thác trang bị kỹ thuật đúng công dụng, tính năng chiến - kỹ thuật của TBKT, bảo đảm an toàn, đáp ứng yêu cầu nhiệm vụ của Quân đội.",
+      "Là tổng thể các hình thức, biện pháp duy trì và phục hồi tính năng chiến - kỹ thuật, độ tin cậy, tuổi thọ của trang bị, nhằm sử dụng, khai thác, bảo đảm an toàn, đáp ứng yêu cầu nhiệm vụ của Quân đội.",
+      "Là những hoạt động có tổ chức, tác động lên TBKT nhằm duy trì đúng tính năng chiến - kỹ thuật và bảo đảm an toàn của TBKT để hoàn thành nhiệm vụ."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệ công tác kỹ thuật QĐNDVN; công tác kỹ thuật gồm bao nhiêu nội dung?",
+    "id": "34",
+    "correct": 0,
+    "options": [
+      "6 nội dung.",
+      "7 nội dung.",
+      "8 nội dung."
+    ]
+  },
+  {
+    "prompt": "So với Điều lệ Công tác kỹ thuật QĐNDVN năm 2004, thì Điều lệ Công tác kỹ thuật QĐNDVN năm 2023 thêm nội dung nào?",
+    "id": "35",
+    "correct": 2,
+    "options": [
+      "Công tác an toàn, vệ sinh lao động.",
+      "Hoạt động khoa học quân sự.",
+      "Quản lý, xây dựng ngành kỹ thuật và đối ngoại kỹ thuật quân sự."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệ công tác kỹ thuật QĐNDVN; ngành kỹ thuật Quân đội có bao nhiêu chuyên ngành?",
+    "id": "36",
+    "correct": 2,
+    "options": [
+      "17 chuyên ngành.",
+      "18 chuyên ngành.",
+      "21 chuyên ngành."
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN, bảo đảm trang bị kỹ thuật có bao nhiêu nội dung?",
+    "id": "37",
+    "correct": 1,
+    "options": [
+      "6nội dung.",
+      "7nội dung.",
+      "8nội dung."
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN; theo tính chất quản lý, trang bị kỹ thuật được phân thành mấy nhóm?",
+    "id": "38",
+    "correct": 0,
+    "options": [
+      "2nhóm.",
+      "3nhóm.",
+      "4 nhóm."
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN; theo chức năng, trang bị kỹ thuật được phân thành mấy nhóm?",
+    "id": "39",
+    "correct": 1,
+    "options": [
+      "2nhóm.",
+      "3nhóm.",
+      "4 nhóm."
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN; theo mục đích sử dụng, trang bị kỹ thuật được phân thành mấy nhóm?",
+    "id": "40",
+    "correct": 1,
+    "options": [
+      "2nhóm.",
+      "3nhóm.",
+      "4 nhóm."
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN, bảo đảm kỹ thuật cho trang bị có bao nhiêu nội dung?",
+    "id": "41",
+    "correct": 0,
+    "options": [
+      "6nội dung.",
+      "7nội dung.",
+      "8nội dung."
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN, quy định hình thức niêm cất ngắn hạn đối với TBKT như thế nào?",
+    "id": "42",
+    "correct": 1,
+    "options": [
+      "Chưa có kế hoạch sử dụng từ 01 tháng đến 3 tháng",
+      "Chưa có kế hoạch sử dụng từ 3 tháng đến 6 tháng",
+      "Chưa có kế hoạch sử dụng từ 6 tháng đến 12 tháng"
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN, quy định hình thức niêm cất dài hạn đối với TBKT như thế nào?",
+    "id": "43",
+    "correct": 1,
+    "options": [
+      "Chưa có kế hoạch sử dụng từ 6 tháng đến 12 tháng.",
+      "Chưa có kế hoạch sử dụng từ 12 tháng trở lên.",
+      "Chưa có kế hoạch sử dụng từ 24 tháng trở lên."
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN, quy định huấn luyện kỹ thuật  tại đơn vị  có bao nhiêu hình thức?",
+    "id": "44",
+    "correct": 2,
+    "options": [
+      "4 hình thức.",
+      "5 hình thức.",
+      "6 hình thức."
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN, nội dung quản lý kỹ thuật?",
+    "id": "45",
+    "correct": 1,
+    "options": [
+      "Quản lý trang bị kỹ thuật; cơ sở kỹ thuật và cán bộ, nhân viên kỹ thuật.",
+      "Quản lý trang bị kỹ thuật; cơ sở kỹ thuật; cán bộ, nhân viên kỹ thuật và vật tư, ngân sách kỹ thuật.",
+      "Quản lý trang bị kỹ thuật; cơ sở, vật chất kỹ thuật; cán bộ, nhân viên kỹ thuật và vật tư, ngân sách kỹ thuật."
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN, nội dung xây dựng ngành kỹ thuật?",
+    "id": "46",
+    "correct": 0,
+    "options": [
+      "Xây dựng chính quy ngành kỹ thuật; xây dựng điểm công tác kỹ thuật và ngày kỹ thuật.",
+      "Xây dựng chính quy hệ thống văn kiện kỹ thuật và nền nếp, chế độ công tác kỹ thuật.",
+      "Xây dựng chính quy hệ thống văn kiện kỹ thuật; nền nếp, chế độ công tác kỹ thuật và chính quy cơ quan, cơ sở kỹ thuật."
+    ]
+  },
+  {
+    "prompt": "Điều lệ công tác kỹ thuật QĐNDVN, nội dung bảo đảm kỹ thuật trong hành quân?",
+    "id": "47",
+    "correct": 1,
+    "options": [
+      "Bảo đảm trang bị kỹ thuật; sửa chữa, cứu kéo trang bị kỹ thuật, bảo đảm vật tư kỹ thuật và huấn luyện kỹ thuật bổ sung.",
+      "Bảo đảm trang bị kỹ thuật; bảo dưỡng kỹ thuật, sửa chữa, cứu kéo trang bị kỹ thuật, bảo đảm vật tư kỹ thuật và huấn luyện kỹ thuật bổ sung",
+      "Bảo đảm trang bị kỹ thuật; bảo quản, bảo dưỡng kỹ thuật, sửa chữa, cứu kéo trang bị kỹ thuật, bảo đảm vật tư kỹ thuật và huấn luyện kỹ thuật bổ sung."
+    ]
+  },
+  {
+    "prompt": "Hướng dẫn 2886/HD-TCHCKT của Tổng cục Hậu cần - Kỹ thuật về hướng dẫn thực hiện tiêu chuẩn 4 của Chỉ thị 79/CT-BQP ngày 22/7/2022 ban hành ngày tháng năm nào?",
+    "id": "48",
+    "correct": 0,
+    "options": [
+      "Ngày 23/11/2022.",
+      "Ngày 22/11/2025.",
+      "Ngày 23/5/2025."
+    ]
+  },
+  {
+    "prompt": "Theo hướng dẫn 2886/HD-TCHCKT của Tổng cục Hậu cần - Kỹ thuật về hướng dẫn thực hiện tiêu chuẩn 4 của Chỉ thị 79/CT-BQP ngày 22/7/2022 xác định đối với cơ sở sử chữa?",
+    "id": "49",
+    "correct": 2,
+    "options": [
+      "Có đủ quy trình, phiếu công nghệ, được cấp thẩm quyền phê duyệt cho từng loại TBKT khi thực hiện bảo dưỡng, sửa chữa; chất lượng sau bảo dưỡng, sửa chữa đạt yêu cầu kỹ thuật; đầy đủ trang thiết bị, phương tiện phục vụ bảo dưỡng, sửa chữa; phải có bảng quy định an toàn, phân công cụ thể trách nhiệm quản lý, sử dụng.",
+      "Có đủ quy trình, phiếu công nghệ, được cấp thẩm quyền phê duyệt cho từng loại TBKT khi thực hiện bảo quản, bảo dưỡng, sửa chữa; chất lượng sau bảo quản, bảo dưỡng, sửa chữa đạt yêu cầu kỹ thuật; đầy đủ trang thiết bị, phương tiện phục vụ bảo quản, bảo dưỡng, sửa chữa; phải có bảng quy định an toàn, phân công cụ thể trách nhiệm quản lý, sử dụng.",
+      "Có đủ quy trình, phiếu công nghệ, được cấp thẩm quyền phê duyệt cho từng loại TBKT khi thực hiện bảo quản, bảo dưỡng, sửa chữa, niêm cất; chất lượng sau bảo quản, bảo dưỡng, sửa chữa, niêm cất đạt yêu cầu kỹ thuật; đầy đủ trang thiết bị, phương tiện phục vụ bảo quản, bảo dưỡng, sửa chữa, niêm cất; phải có bảng quy định an toàn, phân công cụ thể trách nhiệm quản lý, sử dụng."
+    ]
+  },
+  {
+    "prompt": "Theo hướng dẫn 2886/HD-TCHCKT của Tổng cục Hậu cần - Kỹ thuật về hướng dẫn thực hiện tiêu chuẩn 4 của Chỉ thị 79/CT-BQP ngày 22/7/2022 xác định đối với kho kỹ thuật?",
+    "id": "50",
+    "correct": 0,
+    "options": [
+      "Nhà kho phải bảo đảm đày đủ trang bị, dụng cụ phục vụ các nhiệm vụ; tiêu chuẩn trang thiết bị dụng cụ kho theo quy định của các chuyên ngành kỹ thuật. Duy trì nền nếp chế độ công tác bảo quản, bảo dưỡng, cất giữ, niêm cất để nâng cao chất lượng TBKT và VTKT; thường xuyên kiểm tra, kịp thời phát hiện các nguy cơ mất an toàn và thực hiện ngay các biện pháp bảo đảm an toàn đối với nhà kho.",
+      "Nhà kho phải bảo đảm đày đủ trang bị, dụng cụ phục vụ các nhiệm vụ; tiêu chuẩn trang thiết bị dụng cụ kho theo quy định của các chuyên ngành kỹ thuật. Duy trì nền nếp chế dộ công tác bảo quản, bảo dưỡng, sửa chữa, cất giữ, niêm cất để nâng cao chất lượng TBKT và VTKT; thường xuyên kiểm tra, kịp thời phát hiện các nguy cơ mất an toàn và thực hiện ngay các biện pháp bảo đảm an toàn đối với nhà kho.",
+      "Nhà kho phải bảo đảm đày đủ trang bị, dụng cụ phục vụ các nhiệm vụ; tiêu chuẩn trang thiết bị dụng cụ kho theo quy định của các chuyên ngành kỹ thuật. Duy trì nền nếp chế dộ công tác bảo quản, cất giữ, niêm cất để nâng cao chất lượng TBKT và VTKT; thường xuyên kiểm tra, kịp thời phát hiện các nguy cơ mất an toàn và thực hiện ngay các biện pháp bảo đảm an toàn đối với nhà kho"
+    ]
+  },
+  {
+    "prompt": "Theo hướng dẫn 2886/HD-TCHCKT của Tổng cục Hậu cần - Kỹ thuật về hướng dẫn thực hiện tiêu chuẩn 4 của Chỉ thị 79/CT-BQP ngày 22/7/2022 xác định mức độ hoàn thành nhiệm vụ của đội ngũ cán bộ hậu cần, kỹ thuật như thế nào?",
+    "id": "51",
+    "correct": 1,
+    "options": [
+      "100 % được đào tạo có trình độ chuyên môn phù hợp và hoàn thành nhiệm vụ, trong đó có từ 70 % trở lên hoàn thành tốt, xuất sắc nhiệm vụ; riêng cán bộ chủ trì, trợ lý đầu ngành 90 % hoàn thành tốt, xuất sắc nhiệm vụ.",
+      "100 % được đào tạo có trình độ chuyên môn phù hợp và hoàn thành nhiệm vụ, trong đó có từ 75 % trở lên hoàn thành tốt, xuất sắc nhiệm vụ; riêng cán bộ chủ trì, trợ lý đầu ngành 100 % hoàn thành tốt, xuất sắc nhiệm vụ.",
+      "100 % được đào tạo có trình độ chuyên môn phù hợp và hoàn thành nhiệm vụ, trong đó có từ 80 % trở lên hoàn thành tốt, xuất sắc nhiệm vụ; riêng cán bộ chủ trì, trợ lý đầu ngành 100 % hoàn thành tốt, xuất sắc nhiệm vụ."
+    ]
+  },
+  {
+    "prompt": "Theo hướng dẫn 2886/HD-TCHCKT của Tổng cục Hậu cần - Kỹ thuật về hướng dẫn thực hiện tiêu chuẩn 4 của Chỉ thị 79/CT-BQP ngày 22/7/2022 xác định mức độ hoàn thành nhiệm vụ của đội ngũ nhân viên, chiến sĩ hậu cần, kỹ thuật như thế nào?",
+    "id": "52",
+    "correct": 1,
+    "options": [
+      "100 % được đào tạo có trình độ chuyên môn phù hợp với chức trách, nhiệm vụ được giao, 100 % hoàn thành nhiệm vụ, trong đó có 70 % trở lên hoàn thành tốt, xuất sắc nhiệm vụ.",
+      "100 % được đào tạo có trình độ chuyên môn phù hợp với chức trách, nhiệm vụ được giao, 100 % hoàn thành nhiệm vụ, trong đó có 75 % trở lên hoàn thành tốt, xuất sắc nhiệm vụ.",
+      "100 % được đào tạo có trình độ chuyên môn phù hợp với chức trách, nhiệm vụ được giao, 100 % hoàn thành nhiệm vụ, trong đó có 80 % trở lên hoàn thành tốt, xuất sắc nhiệm vụ."
+    ]
+  },
+  {
+    "prompt": "Chỉ thị 140/CT-BTL của Tư lệnh Quân khu “về việc dự trữ đạn, vật chất hậu cần bảo đảm cho nhiệm vụ SSCĐ” ban hành ngày tháng năm nào?",
+    "id": "53",
+    "correct": 0,
+    "options": [
+      "14/01/2019",
+      "24/01/2019",
+      "24/02/2019"
+    ]
+  },
+  {
+    "prompt": "Theo Chỉ thị 140/CT-BTL ngày 14/01/2019 của Tư lệnh Quân khu quy định số lượng đạn bảo đảm SSCĐ mang theo súng cối 60 như thế nào?",
+    "id": "54",
+    "correct": 0,
+    "options": [
+      "Thường: 0,05 cơ số; chiến đấu: 0,1 cơ số.",
+      "Thường: 0,1 cơ số; chiến đấu: 0,2 cơ số.",
+      "Thường: 0,25 cơ số; chiến đấu: 0,5 cơ số."
+    ]
+  },
+  {
+    "prompt": "Theo Chỉ thị 140/CT-BTL ngày 14/01/2019 của Tư lệnh Quân khu quy định số lượng đạn bảo đảm SSCĐ mang theo súng cối 82 như thế nào?",
+    "id": "55",
+    "correct": 1,
+    "options": [
+      "Thường: 0,05 cơ số; chiến đấu: 0,1 cơ số.",
+      "Thường: 0,1 cơ số; chiến đấu: 0,2 cơ số.",
+      "Thường: 0,25 cơ số; chiến đấu: 0,5 cơ số."
+    ]
+  },
+  {
+    "prompt": "Theo Chỉ thị 140/CT-BTL ngày 14/01/2019 của Tư lệnh Quân khu quy định số lượng đạn bảo đảm SSCĐ mang theo súng cối 100 như thế nào?",
+    "id": "56",
+    "correct": 2,
+    "options": [
+      "Thường: 0,05 cơ số; chiến đấu: 0,1 cơ số.",
+      "Thường: 0,1 cơ số; chiến đấu: 0,2 cơ số.",
+      "Thường: 0,25 cơ số; chiến đấu: 0,5 cơ số."
+    ]
+  },
+  {
+    "prompt": "Theo Chỉ thị 140/CT-BTL ngày 14/01/2019 của Tư lệnh Quân khu quy định số lượng đạn bảo đảm SSCĐ mang theo súng máy phòng không 12,7 mm như thế nào?",
+    "id": "57",
+    "correct": 1,
+    "options": [
+      "Thường: 0,1 cơ số; chiến đấu: 0,2 cơ số.",
+      "Thường: 0,1 cơ số; chiến đấu: 0,3 cơ số.",
+      "Thường: 0,25 cơ số; chiến đấu: 0,5 cơ số."
+    ]
+  },
+  {
+    "prompt": "Theo Chỉ thị 140/CT-BTL ngày 14/01/2019 của Tư lệnh Quân khu quy định lựu đạn cho bộ binh như thế nào?",
+    "id": "58",
+    "correct": 0,
+    "options": [
+      "Thường: 01 quả; chiến đấu: 02 quả.",
+      "Thường: 01 quả; chiến đấu: 04 quả.",
+      "Thường: 02 quả; chiến đấu: 04 quả."
+    ]
+  },
+  {
+    "prompt": "Theo Chỉ thị 140/CT-BTL ngày 14/01/2019 của Tư lệnh Quân khu quy định lựu đạn cho binh chủng và cơ quan như thế nào?",
+    "id": "59",
+    "correct": 1,
+    "options": [
+      "Thường: 01 quả; chiến đấu: 02 quả.",
+      "Thường: 01 quả; chiến đấu: 04 quả.",
+      "Thường: 02 quả; chiến đấu: 04 quả."
+    ]
+  },
+  {
+    "prompt": "Thông tư 96/2025/TT-BQP ngày 25/8/2025của Bộ Quốc phòng quy định định lượng gạo mức tiền ăn cơ bản bộ binh là?",
+    "id": "60",
+    "correct": 2,
+    "options": [
+      "700 g.",
+      "650 g.",
+      "680 g."
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 317/HD-SĐ ngày 24/02/2026 công tác bảo đảm Quân nhu năm 2026 của Sư đoàn, chỉ tiêu bình quân/người/năm (tính theo quân số ăn tại bếp) của trứng gia cầm là?",
+    "id": "61",
+    "correct": 2,
+    "options": [
+      "7,5kg, đạt 51,3% định lượng.",
+      "8kg, đạt 54,7% định lượng.",
+      "8,5kg, đạt 62,5% định lượng."
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 317/HD-SĐ ngày 24/02/2026 công tác bảo đảm Quân nhu năm 2026 của Sư đoàn: diện tích chuồng các loại được quy định là?",
+    "id": "62",
+    "correct": 1,
+    "options": [
+      "2,85m2/người.",
+      "3m2/người.",
+      "2,5m2/người."
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 317/HD-SĐ ngày 24/02/2026 công tác bảo đảm Quân nhu năm 2026 của Sư đoàn, quy định chỉ tiêu số lượng gia cầm đẻ là?",
+    "id": "63",
+    "correct": 0,
+    "options": [
+      "1 người có 1 con trở lên.",
+      "5 người có 3 con trở lên.",
+      "1 người có 2 con trở lên."
+    ]
+  },
+  {
+    "prompt": "Thông tư 96/2025/TT-BQP: quy định ăn thêm khi hành quân trên đường của chiến sĩ mới nhập ngũ như thế nào?",
+    "id": "64",
+    "correct": 1,
+    "options": [
+      "Chiến sỹ mới nhập ngũ hành quân bằng ô tô, tàu hỏa từ địa phương giao quân về đến đơn vị có khoảng cách từ 300km trở lên, không có điều kiện để tổ chức nấu ăn trên đường hành quân. Mức ăn thêm: 65.000 đồng/người/ngày.",
+      "Chiến sỹ mới nhập ngũ hành quân bằng ô tô, tàu hỏa từ địa phương giao quân về đến đơn vị có khoảng cách từ 300km trở lên, không có điều kiện để tổ chức nấu ăn trên đường hành quân. Mức ăn thêm: 72.000 đồng/người/ngày.",
+      "Chiến sỹ mới nhập ngũ hành quân bằng ô tô, tàu hỏa từ địa phương giao quân về đến đơn vị có khoảng cách từ 200km trở lên, không có điều kiện để tổ chức nấu ăn trên đường hành quân. Mức ăn thêm: 109.000 đồng/người/ngày."
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 317/HD-SĐ ngày 24/02/2026 công tác bảo đảm Quân nhu năm 2026 của Sư đoàn, giá trị thu lãi từ TGSX, chế biến và dịch vụ hậu cần?",
+    "id": "65",
+    "correct": 0,
+    "options": [
+      "1.550.000 đồng.",
+      "1.500.000 đồng.",
+      "1.600.000 đồng."
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 317/HD-SĐ ngày 24/02/2026 công tác bảo đảm Quân nhu năm 2026 của Sư đoàn, diện tích ao cá quy định?",
+    "id": "66",
+    "correct": 0,
+    "options": [
+      "25m2/người trở lên.",
+      "50m2/người trở lên.",
+      "75m2/người trở lên."
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 317/HD-SĐ ngày 24/02/2026 công tác bảo đảm Quân nhu năm 2026 của Sư đoàn, chỉ tiêu bình quân/người/năm (tính theo quân số ăn tại bếp) của cá tươi là?",
+    "id": "67",
+    "correct": 0,
+    "options": [
+      "32,9kg, đạt 60% định lượng.",
+      "27kg, đạt 100% định lượng.",
+      "29,5kg, đạt 52% định lượng."
+    ]
+  },
+  {
+    "prompt": "Thông tư 96/2025/TT-BQP ngày 25/8/2025 của Bộ Quốc phòng: Đối tượng sỹ quan, quân nhân chuyên nghiệp được ăn thêm những ngày lễ, tết nào?",
+    "id": "68",
+    "correct": 2,
+    "options": [
+      "Ngày 01/01; 4 ngày tết Âm Lịch; ngày 10/3 AL; ngày 30/4; ngày 01/5; ngày 19/8; ngày 02/9; ngày 22/12.",
+      "Ngày 01/01; 5 ngày tết Âm Lịch; ngày 10/3 AL; ngày 30/4; ngày 01/5; ngày 07/5; ngày 02/9; ngày 22/12.",
+      "Ngày 01/01; 5 ngày tết Âm Lịch; ngày 10/3 AL; ngày 30/4; ngày 01/5; 2 ngày 02/9; ngày 22/12."
+    ]
+  },
+  {
+    "prompt": "Thông tư 96/2025/TT-BQP ngày 25/8/2025 của Bộ Quốc phòng: Nhiệt lượng quy định đối với mức ăn cơ bản bộ binh là bao nhiêu?",
+    "id": "69",
+    "correct": 1,
+    "options": [
+      "3.200 Kcal.",
+      "3.300 Kcal.",
+      "3.400 Kcal."
+    ]
+  },
+  {
+    "prompt": "Theo Chỉ lệnh số 78/CL-SĐ ngày 25/01/2026 về công tác Hậu cần - Kỹ thuật năm 2026 của Sư đoàn trưởng sản phẩm TGSX, CB chi ăn phải thấp hơn giá thị trường cùng thời điểm lần lượt là?",
+    "id": "70",
+    "correct": 0,
+    "options": [
+      "10 - 20 %",
+      "20 - 25 %",
+      "12 - 25 %"
+    ]
+  },
+  {
+    "prompt": "Định lượng thịt lợn xô lọc/01 chiếc bánh chưng trong tiêu chuẩn, định lượng bánh chưng Tết Nguyên đán quy định tại Thông tư 96/2025/TT-BQP ?",
+    "id": "71",
+    "correct": 2,
+    "options": [
+      "90g.",
+      "100g.",
+      "150g."
+    ]
+  },
+  {
+    "prompt": "Mức tiền an, bồi dưỡng áp dụng 01 lần/năm đối với sĩ quan, quân nhân chuyên nghiệp có cấp bậc quân hàm cấp úy; công nhân quốc phòng có hệ số lương dưới 4,95; công chức quốc phòng, viên chức quốc phòng có hệ số lương dưới 4,0 theo TT/96/2025/TT-BQP ?",
+    "id": "72",
+    "correct": 2,
+    "options": [
+      "2.200.000đ.",
+      "2.100.000đ.",
+      "2.400.000đ."
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 317/HD-SĐ ngày 24/02/2026 công tác bảo đảm Quân nhu năm 2026 của Sư đoàn, diện tích chuồng trại được quy định?",
+    "id": "73",
+    "correct": 0,
+    "options": [
+      "Chuồng lợn: 1,2m2/người; chuồng gia cầm: 1,25m2/người trở lên; chuồng bò: 0,3m2/người trở lên",
+      "Chuồng lợn: 1 m2/người; chuồng gia cầm: 1,5m2/người trở lên; chuồng bò: 0,3m2/người trở lên",
+      "Chuồng lợn: 1,1m2/người; chuồng gia cầm: 1,6m2/người trở lên; chuồng bò: 0,3m2/người trở lên"
+    ]
+  },
+  {
+    "prompt": "Bếp Hoàng Cầm có các bộ phận?",
+    "id": "74",
+    "correct": 0,
+    "options": [
+      "Bệ bếp, hệ thống thoát khói, rãnh thoát nước, hố ngồi đun",
+      "Hầm bếp, hệ thống thoát khói, rãnh thoát nước, mái che bếp",
+      "Hố ngồi đun, hệ thống thoát khói, mái che bếp, bệ bếp"
+    ]
+  },
+  {
+    "prompt": "Tiêu chuẩn ăn hàng ngày theo Thông tư 96/2025/TT-BQP đối với bộ binh?",
+    "id": "75",
+    "correct": 1,
+    "options": [
+      "57.000đ",
+      "72.000đ",
+      "65.000đ"
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 317/HD-SĐ ngày 24/02/2026 công tác bảo đảm Quân nhu năm 2026 của Sư đoàn, giá trị thu lãi từ TGSX, chế biến?",
+    "id": "76",
+    "correct": 1,
+    "options": [
+      "1.550.000 đồng.",
+      "960.000 đồng.",
+      "590.000 đồng."
+    ]
+  },
+  {
+    "prompt": "Mức 7 tiền ăn quân chủng, binh chủng quy định tại Thông tư 96/2025/TT-BQP là bao nhiêu ?",
+    "id": "77",
+    "correct": 2,
+    "options": [
+      "107.000đ.",
+      "108.000đ.",
+      "109.000đ."
+    ]
+  },
+  {
+    "prompt": "Mức tiền ăn bệnh nhân điều trị tại các cơ sở khám bệnh, chữa bệnh: Bệnh viện trong và ngoài quân đội, đội điều trị, bệnh xá, Đại đội, Tiểu đoàn quân y quy định tại Thông tư 96/2025/TT-BQP là bao nhiêu ?",
+    "id": "78",
+    "correct": 1,
+    "options": [
+      "120.000đ.",
+      "126.000đ.",
+      "132.000đ."
+    ]
+  },
+  {
+    "prompt": "Mức tiền ăn thêm khi ốm đau được điều trị tại tổ Quân y có giường lưu; ốm tại trại quy định Thông tư 96/2025/TT-BQP là bao nhiêu ?",
+    "id": "79",
+    "correct": 1,
+    "options": [
+      "20.000đ.",
+      "22.000đ.",
+      "23.000đ."
+    ]
+  },
+  {
+    "prompt": "Thông tư 96/2025/TT-BQP ngày 25/8/2025của Bộ Quốc phòng: Với mức ăn cơ bản của bộ binh, chất đốt quy định?",
+    "id": "80",
+    "correct": 2,
+    "options": [
+      "700g than cám A.",
+      "5% tiền lương thực, thực phẩm.",
+      "3,5% tiền lương thực, thực phẩm."
+    ]
+  },
+  {
+    "prompt": "Thông tư 96/2025/TT-BQP ngày 25/8/2025của Bộ Quốc phòng: Với mức ăn cơ bản của bộ binh, tiền vệ sinh trang bị, DCCD quy định?",
+    "id": "81",
+    "correct": 0,
+    "options": [
+      "0,35% tiền lương thực, thực phẩm.",
+      "5% tiền lương thực, thực phẩm.",
+      "3% tiền lương thực, thực phẩm."
+    ]
+  },
+  {
+    "prompt": "Đối tượng được hưởng ăn chế độ quân chủng, binh chủng thuộc biên chế đơn vị cấp nào quy định Thông tư 96/2025/TT-BQP?",
+    "id": "82",
+    "correct": 0,
+    "options": [
+      "Đại đội và tương đương trở xuống.",
+      "Tiểu đoàn và tương đương trở xuống.",
+      "Tiểu đoàn và Đại đội."
+    ]
+  },
+  {
+    "prompt": "Theo Thông tư 96/2025/TT-BQP, giá gạo tẻ loại trung bình là bao nhiêu ?",
+    "id": "83",
+    "correct": 1,
+    "options": [
+      "13.000đ.",
+      "15.000đ.",
+      "16.000đ."
+    ]
+  },
+  {
+    "prompt": "Mức tiền an, bồi dưỡng áp dụng 01 lần/năm đối với sĩ quan có cấp bậc quân hàm Trung tá, Thiếu tá; sĩ quan có hệ số lương 6,2; quân nhân chuyên nghiệp có cấp bậc quân hàm Trung tá, Thiếu tá; quân nhân đang hưởng phụ cấp chức vụ lãnh đạo có hệ số từ 0,4 đến 0,7; công nhân quốc phòng có hệ số lương từ 4,95 đến dưới 6,35; công chức quốc phòng, viên chức quốc phòng có hệ số lương từ 4,0 đến dưới 5,43 theo TT/96/2025/TT-BQP ?",
+    "id": "84",
+    "correct": 0,
+    "options": [
+      "3.100.000đ.",
+      "3.200.000đ.",
+      "2.700.000đ."
+    ]
+  },
+  {
+    "prompt": "Cơ cấu ăn 2-4-4 trong ngày được phân chia theo gì?",
+    "id": "85",
+    "correct": 2,
+    "options": [
+      "Tiền ăn.",
+      "Định lượng.",
+      "Năng lượng."
+    ]
+  },
+  {
+    "prompt": "Ăn thêm lực lượng bảo đảm, phục vụ áp dụng đối với người làm công tác phục vụ, bảo đảm cho đối tượng ăn binh chủng theo thông tư 96/2025/TT-BQP là bao nhiêu tiền?",
+    "id": "86",
+    "correct": 2,
+    "options": [
+      "11.000đ/người/ngày.",
+      "12.000đ/người/ngày.",
+      "15.000đ/người/ngày."
+    ]
+  },
+  {
+    "prompt": "Tiêu chuẩn dây, lá, gia vị/01 chiếc bánh chưng trong tiêu chuẩn, định lượng bánh chưng Tết Nguyên đán quy định tại Thông tư 96/2025/TT-BQP?",
+    "id": "87",
+    "correct": 2,
+    "options": [
+      "0,35% tiền lương thực, thực phẩm.",
+      "5% tiền lương thực, thực phẩm.",
+      "3,5% tiền lương thực, thực phẩm."
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 69/HD-HCKT ngày 09/01/2026 của Cục HC-KT Quân khu, quy định quy đổi thế nào dưới đây là đúng?",
+    "id": "88",
+    "correct": 2,
+    "options": [
+      "1,5kg thịt lợn xô lọc = 1 kg thịt lợn nạc = 1kg thịt gia cầm làm sạch; 3kg thịt gia cầm làm sạch = 3kg thịt lợn nạc = 1kg thịt bò loại 1; 1,5kg cá tươi (trắm, trôi, mè, chép,…) = 1kg thịt xô lọc.",
+      "2,5kg thịt lợn xô lọc = 1 kg thịt lợn nạc = 1kg thịt gia cầm làm sạch; 3kg thịt gia cầm làm sạch = 3kg thịt lợn nạc = 2 kg thịt bò loại 1; 1,5kg cá tươi (trắm, trôi, mè, chép,…) = 1kg thịt xô lọc.",
+      "1,5kg thịt lợn xô lọc = 1 kg thịt lợn nạc = 2 kg thịt gia cầm làm sạch; 3kg thịt gia cầm làm sạch = 3kg thịt lợn nạc = 1kg thịt bò loại 1; 2kg cá tươi (trắm, trôi, mè, chép,…) = 1kg thịt xô lọc."
+    ]
+  },
+  {
+    "prompt": "Để bảo đảm yêu cầu huấn luyện, SSCĐ và chiến đấu bếp Hoàng Cầm nói chung và bếp Hoàng cầm cấp I nói riêng phải đáp ứng 3 yêu cầu sau:",
+    "id": "89",
+    "correct": 2,
+    "options": [
+      "Bảo đảm giữ được bí mật, Bảo đảm kiên cố, Bảo đảm cấp nhiệt tốt.",
+      "Bảo đảm giữ được bí mật, Bảo đảm an toàn, Bảo đảm chất lượng.",
+      "Bảo đảm giữ được bí mật, Bảo đảm an toàn, Bảo đảm cấp nhiệt tốt."
+    ]
+  },
+  {
+    "prompt": "Dấu hiệu đặc trưng tại chỗ của rắn lục cắn là gì?",
+    "id": "90",
+    "correct": 1,
+    "options": [
+      "Vết cắn không đau, không sưng.",
+      "Hai dấu răng cách nhau khoảng 1 cm, sưng nề nhanh.",
+      "Một dấu răng duy nhất, không chảy máu."
+    ]
+  },
+  {
+    "prompt": "Nguyên nhân tử vong chủ yếu trong rắn hổ cắn là?",
+    "id": "91",
+    "correct": 2,
+    "options": [
+      "Sốc phản vệ.",
+      "Xuất huyết nội.",
+      "Suy hô hấp do liệt các cơ hô hấp."
+    ]
+  },
+  {
+    "prompt": "Biện pháp nào không được sử dụng khi sơ cứu rắn độc cắn?",
+    "id": "92",
+    "correct": 1,
+    "options": [
+      "Băng ép bất động.",
+      "Ga rô động mạch.",
+      "Trấn an bệnh nhân."
+    ]
+  },
+  {
+    "prompt": "Con đường thường gặp nhất gây ngộ độc cấp là?",
+    "id": "93",
+    "correct": 2,
+    "options": [
+      "Đường máu.",
+      "Đường da, niêm mạc.",
+      "Đường tiêu hóa."
+    ]
+  },
+  {
+    "prompt": "Ưu tiên hàng đầu trong xử trí ngộ độc cấp là?",
+    "id": "94",
+    "correct": 2,
+    "options": [
+      "Rửa dạ dày.",
+      "Dùng thuốc giải độc đặc hiệu.",
+      "Ổn định các chức năng sống."
+    ]
+  },
+  {
+    "prompt": "Than hoạt trong ngộ độc cấp có tác dụng chính là?",
+    "id": "95",
+    "correct": 2,
+    "options": [
+      "Trung hòa chất độc.",
+      "Tăng bài tiết qua thận.",
+      "Hạn chế hấp thu độc chất."
+    ]
+  },
+  {
+    "prompt": "Nguyên nhân tử vong chủ yếu trong đuối nước là?",
+    "id": "96",
+    "correct": 1,
+    "options": [
+      "Nhiễm trùng.",
+      "Thiếu oxy.",
+      "Hạ thân nhiệt."
+    ]
+  },
+  {
+    "prompt": "Khi nghi ngờ nạn nhân đuối nước có chấn thương cột sống cổ, cần?",
+    "id": "97",
+    "correct": 2,
+    "options": [
+      "Dốc ngược nạn nhân.",
+      "Nâng cổ tối đa.",
+      "Giữ cổ ở vị trí trung gian, chỉ nâng hàm dưới."
+    ]
+  },
+  {
+    "prompt": "Tần số ép tim ngoài lồng ngực ở người lớn là?",
+    "id": "98",
+    "correct": 2,
+    "options": [
+      "60 - 80 lần/phút.",
+      "80 - 90 lần/phút.",
+      "100 - 120 lần/phút."
+    ]
+  },
+  {
+    "prompt": "Biên độ ép tim ngoài lồng ngực ở người lớn là?",
+    "id": "99",
+    "correct": 1,
+    "options": [
+      "2 - 3 cm.",
+      "3 - 4 cm.",
+      "5- 6 cm."
+    ]
+  },
+  {
+    "prompt": "Việc làm đầu tiên khi cấp cứu người bị điện giật là?",
+    "id": "100",
+    "correct": 2,
+    "options": [
+      "Ép tim ngay.",
+      "Thổi ngạt.",
+      "Tách nạn nhân khỏi nguồn điện một cách an toàn."
+    ]
+  },
+  {
+    "prompt": "Dòng điện nào có xu hướng làm nạn nhân dính chặt vào nguồn điện?",
+    "id": "101",
+    "correct": 1,
+    "options": [
+      "Dòng điện một chiều (DC).",
+      "Dòng điện xoay chiều (AC).",
+      "Dòng điện thấp thế."
+    ]
+  },
+  {
+    "prompt": "Rối loạn nhịp tim thường gây tử vong nhất trong điện giật là?",
+    "id": "102",
+    "correct": 0,
+    "options": [
+      "Ngoại tâm thu.",
+      "Block tim.",
+      "Rung thất."
+    ]
+  },
+  {
+    "prompt": "Dấu hiệu gợi ý suy thận cấp muộn sau điện giật là?",
+    "id": "103",
+    "correct": 1,
+    "options": [
+      "Tiểu nhiều.",
+      "Tiểu đỏ sẫm, vô niệu.",
+      "Phù mặt."
+    ]
+  },
+  {
+    "prompt": "Nguyên tắc xử trí quan trọng nhất trong cấp cứu đuối nước là?",
+    "id": "104",
+    "correct": 1,
+    "options": [
+      "Đưa ngay đến bệnh viện.",
+      "Sơ cứu tích cực, đúng phương pháp tại chỗ.",
+      "Dốc nước ra khỏi phổi."
+    ]
+  },
+  {
+    "prompt": "Khi thổi ngạt, mỗi lần thổi kéo dài khoảng?",
+    "id": "105",
+    "correct": 0,
+    "options": [
+      "1 giây.",
+      "2 giây.",
+      "4 giây."
+    ]
+  },
+  {
+    "prompt": "Ngộ độc khí CO chủ yếu gây tổn thương do?",
+    "id": "106",
+    "correct": 1,
+    "options": [
+      "Suy gan.",
+      "Thiếu oxy mô.",
+      "Suy thận."
+    ]
+  },
+  {
+    "prompt": "Biện pháp không đúng trong phòng tránh rắn cắn là?",
+    "id": "107",
+    "correct": 1,
+    "options": [
+      "Đi ủng cao cổ khi đi rừng.",
+      "Ngủ trực tiếp trên nền đất.",
+      "Dùng đèn khi đi ban đêm."
+    ]
+  },
+  {
+    "prompt": "Dấu hiệu chẩn đoán ngưng hô hấp – tuần hoàn là?",
+    "id": "108",
+    "correct": 1,
+    "options": [
+      "Không nói được.",
+      "Mất ý thức, không thở, không mạch.",
+      "Da tái nhẹ."
+    ]
+  },
+  {
+    "prompt": "Thời gian vàng để hồi sinh tim phổi hiệu quả là trong vòng?",
+    "id": "109",
+    "correct": 2,
+    "options": [
+      "1 phút.",
+      "3 phút.",
+      "5 phút."
+    ]
+  },
+  {
+    "prompt": "Tỷ lệ ép tim và thổi ngạt trong một chu kỳ hồi sinh tim phổi (đối với người lớn) là bao nhiêu?",
+    "id": "110",
+    "correct": 1,
+    "options": [
+      "15 lần ép tim / 2 lần thổi ngạt.",
+      "30 lần ép tim / 2 lần thổi ngạt.",
+      "5 lần ép tim / 1 lần thổi ngạt."
+    ]
+  },
+  {
+    "prompt": "Khi cố định gãy xương đùi bằng nẹp tre, cần sử dụng bao nhiêu nẹp và nẹp ngoài dài từ đâu đến đâu?",
+    "id": "111",
+    "correct": 0,
+    "options": [
+      "2 nẹp; nẹp ngoài từ hố nách đến gót chân.",
+      "3 nẹp; nẹp ngoài từ hố nách đến quá gót chân 1cm.",
+      "3 nẹp; nẹp ngoài từ mào chậu đến gót chân."
+    ]
+  },
+  {
+    "prompt": "Khi cố định gãy xương cẳng tay, tư thế của cẳng tay thương binh phải như thế nào?",
+    "id": "112",
+    "correct": 0,
+    "options": [
+      "Duỗi thẳng hoàn toàn.",
+      "Gấp 90 độ, để ngửa hoặc nửa sấp ngửa.",
+      "Gấp tối đa vào cánh tay."
+    ]
+  },
+  {
+    "prompt": "Đối với thương binh bị tổn thương cột sống thắt lưng, phương tiện vận chuyển tốt nhất là gì?",
+    "id": "113",
+    "correct": 2,
+    "options": [
+      "Cáng võng mềm.",
+      "Cõng trên lưng.",
+      "Cáng cứng (ván gỗ, cánh cửa)."
+    ]
+  },
+  {
+    "prompt": "Khi vận chuyển thương binh bằng cáng, nếu phải lên dốc thì quy tắc nào sau đây là đúng?",
+    "id": "114",
+    "correct": 0,
+    "options": [
+      "Đầu thương binh đi trước.",
+      "Chân thương binh đi trước.",
+      "Đi ngang cáng."
+    ]
+  },
+  {
+    "prompt": "Kỹ thuật \"Dìu thương binh\" được áp dụng trong trường hợp nào?",
+    "id": "115",
+    "correct": 1,
+    "options": [
+      "Thương binh bị gãy xương đùi.",
+      "Thương binh bị tổn thương cột sống.",
+      "Thương binh nhẹ, tỉnh táo, chân không bị thương nặng, không có nguy cơ đe dọa trực tiếp của hỏa lực địch."
+    ]
+  },
+  {
+    "prompt": "Vị trí thường gặp của hắc lào ở bộ đội là?",
+    "id": "116",
+    "correct": 1,
+    "options": [
+      "Bàn tay.",
+      "Nách, bẹn, đùi trong.",
+      "Da đầu."
+    ]
+  },
+  {
+    "prompt": "Bệnh viêm da mủ thường liên quan nhiều nhất đến yếu tố nào?",
+    "id": "117",
+    "correct": 1,
+    "options": [
+      "Nhiễm virus.",
+      "Nhiễm vi khuẩn.",
+      "Nhiễm nấm."
+    ]
+  },
+  {
+    "prompt": "Yếu tố thuận lợi gây viêm da mủ trong huấn luyện là?",
+    "id": "118",
+    "correct": 2,
+    "options": [
+      "Trời lạnh.",
+      "Da khô.",
+      "Trầy xước, vệ sinh kém."
+    ]
+  },
+  {
+    "prompt": "Biện pháp phòng bệnh ngoài da hiệu quả nhất trong đơn vị là?",
+    "id": "119",
+    "correct": 1,
+    "options": [
+      "Uống nhiều thuốc",
+      "Giữ vệ sinh cá nhân và doanh trại",
+      "Hạn chế huấn luyện"
+    ]
+  },
+  {
+    "prompt": "Đồng chí cho biết trong phong trào thi đua ngành doanh trại có bao nhiêu nội dung theo thông tư số 36/2023/TT-BQP ngày 29/5/2023 của Bộ trưởng Bộ Quốc phòng?",
+    "id": "120",
+    "correct": 1,
+    "options": [
+      "5 nội dung.",
+      "6 nội dung.",
+      "7 nội dung."
+    ]
+  },
+  {
+    "prompt": "Tiêu chuẩn diện tích ở tối đa cho sỹ quan quân đội Theo Nghị định số 02/2026/NĐ-CP ngày 20/01/2026 của Thủ tướng chính phủ là bao nhiêu?",
+    "id": "121",
+    "correct": 0,
+    "options": [
+      "40-50m2/người.",
+      "45-55m2/người.",
+      "35-45m2/người."
+    ]
+  },
+  {
+    "prompt": "Theo Nghị định số 02/2026/NĐ-CP ngày 20/01/2026 của Thủ tướng chính phủ, tiêu chuẩn nước của SQ, QNCN, HSQ-BS là bao nhiêu? (tính theo lít/người/ngày).",
+    "id": "122",
+    "correct": 0,
+    "options": [
+      "SQ, QNCN: 240 lít/người/ngày; HSQ-BS: 220 lít/người/ngày.",
+      "SQ, QNCN, HSQ-BS: Từ 200 đến 220 lít/người/ngày.",
+      "SQ, QNCN, HSQ-BS: 220 lít/người/ngày."
+    ]
+  },
+  {
+    "prompt": "Theo thông tư số 36/2023/TT-BQP ngày 29/5/2023 của Bộ trưởng Bộ Quốc phòng nội dung thứ 3 trong thực hiện phong trào thi đua Ngành Doanh trại là nội dung nào?",
+    "id": "123",
+    "correct": 1,
+    "options": [
+      "Tổ chức quản lý đầu tư xây dựng, sửa chữa, bảo trì công trình doanh trại theo quy định của Nhà nước và Bộ Quốc phòng.",
+      "Quản lý sử dụng điện, nước an toàn, tiết kiệm, hiệu quả.",
+      "Quản lý sử dụng tốt doanh cụ, dụng cụ sinh hoạt; bảo đảm thống nhất về chất lượng, quy cách."
+    ]
+  },
+  {
+    "prompt": "Tiêu chuẩn dụng cụ sinh hoạt cho Chỉ huy Đại đội, Trung đội và tương đương; sĩ quan giữ chức vụ có bậc quân hàm là cấp úy Theo Nghị định số 02/2026/NĐ-CP ngày 20/01/2026 của Thủ tướng chính phủ là bao nhiêu?",
+    "id": "124",
+    "correct": 2,
+    "options": [
+      "1 người/bộ.",
+      "3 người/bộ.",
+      "2 người/bộ"
+    ]
+  },
+  {
+    "prompt": "Định mức sử dụng điện năng trong sinh hoạt làm việc đối với Chỉ huy Tiểu đoàn và tương đương; sĩ quan giữ chức vụ có cấp bậc quân hàm cao nhất là Trung tá, thiếu tá Theo Nghị định số 02/2026/NĐ-CP ngày 20/01/2026 của Thủ tướng chính phủ là bao nhiêu?",
+    "id": "125",
+    "correct": 1,
+    "options": [
+      "300 kwh/người/tháng.",
+      "305 kwh/người/tháng .",
+      "310 kwh/người/tháng."
+    ]
+  },
+  {
+    "prompt": "Tiêu chuẩn diện tích trong nhà ăn cho sỹ quan cấp úy, tá và tương đương Theo Nghị định số 02/2026/NĐ-CP ngày 20/01/2026 của Thủ tướng chính phủ là bao nhiêu?",
+    "id": "126",
+    "correct": 0,
+    "options": [
+      "2,0m2/người.",
+      "2,1m2/người.",
+      "2,2m2/người."
+    ]
+  },
+  {
+    "prompt": "Tiêu chuẩn dụng cụ sinh hoạt cho Sĩ quan cấp úy không giữ chức vụ Theo Nghị định số 02/2026/NĐ-CP ngày 20/01/2026 của Thủ tướng chính phủ là bao nhiêu?",
+    "id": "127",
+    "correct": 2,
+    "options": [
+      "4 người/bộ.",
+      "3 người/bộ.",
+      "2 người/bộ."
+    ]
+  },
+  {
+    "prompt": "Theo Nghị định số 02/2026/NĐ-CP ngày 20/01/2026 của Thủ tướng chính phủ quy định một bộ dụng cụ sinh hoạt bao gồm những nội dung gì và niên hạn sử dụng là  bao nhiêu?",
+    "id": "128",
+    "correct": 2,
+    "options": [
+      "Một bộ dụng cụ sinh hoạt bao gồm: 01 chậu to, 02 chậu nhỏ, 02 xô nhỏ (niên hạn sử dụng là 01 năm).",
+      "Một bộ dụng cụ sinh hoạt bao gồm: 02 chậu to, 02 chậu nhỏ, 02 xô nhỏ (niên hạn sử dụng là 01 năm).",
+      "Một bộ dụng cụ sinh hoạt bao gồm: 02 chậu to, 02 chậu nhỏ, 02 xô nhỏ (niên hạn sử dụng là 02 năm)"
+    ]
+  },
+  {
+    "prompt": "Theo Nghị định số 02/2026/NĐ-CP ngày 20/01/2026 của Thủ tướng chính phủ quy định tiêu chuẩn doanh cụ sử dụng trong nhà ở đối với với Chỉ huy Tiểu đoàn và tương đương; sĩ quan giữ chức vụ có cấp bậc quân hàm cao nhất là Trung tá, thiếu tá là bao nhiêu?",
+    "id": "129",
+    "correct": 2,
+    "options": [
+      "Một người bao gồm: 01 giường, 01 tủ áo, 01 tủ tài liệu",
+      "Một người bao gồm: 01 giường, 01 tủ áo, 01 bộ bàn ghế uống nước",
+      "Một người bao gồm: 01 giường, 01 tủ áo, 01 bàn làm việc"
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 2966/HD-TCHC ngày 26/12/2023 của Tổng cục Hậu cần (nay là Tổng cục Hậu cần - Kỹ thuật) thời gian tính hao mòn đối với nhà cấp IV là bao nhiêu năm?",
+    "id": "130",
+    "correct": 0,
+    "options": [
+      "10 năm.",
+      "15 năm.",
+      "20 năm."
+    ]
+  },
+  {
+    "prompt": "Theo Hướng dẫn số 2966/HD-TCHC ngày 26/12/2023 của Tổng cục Hậu cần (nay là Tổng cục Hậu cần - Kỹ thuật) thời gian tính hao mòn đối với nhà cấp III là bao nhiêu năm?",
+    "id": "131",
+    "correct": 0,
+    "options": [
+      "25 năm.",
+      "15 năm.",
+      "20 năm."
+    ]
+  },
+  {
+    "prompt": "Căn cứ Thông tư số 157/2017/TT-BQP ngày 02/7/2017 của Bộ Quốc Phòng, đất sử dụng vào mục đích ‘xây dựng căn cứ quân sự’ là đất do ngành nào quản lý ?",
+    "id": "132",
+    "correct": 2,
+    "options": [
+      "Ngành tác chiến quản lý.",
+      "Ngành Hậu cần quản lý.",
+      "Ngành doanh trại quản lý."
+    ]
+  },
+  {
+    "prompt": "Căn cứ Thông tư số 157/2017/TT-BQP ngày 02/7/2017 của Bộ Quốc Phòng, đất do Ngành Hậu cần quản lý gồm bao nhiêu loại đất?",
+    "id": "133",
+    "correct": 2,
+    "options": [
+      "6 loại đất.",
+      "7 loại đất.",
+      "8 loại đất."
+    ]
+  },
+  {
+    "prompt": "Định mức sử dụng điện năng trong sinh hoạt làm việc đối với Chỉ huy Đại đội, Trung đội và tương đương; sĩ quan giữ chức vụ có bậc quân hàm là cấp úy Theo Nghị định số 02/2026/NĐ-CP ngày 20/01/2026 của Thủ tướng chính phủ là bao nhiêu?",
+    "id": "134",
+    "correct": 0,
+    "options": [
+      "120 kwh/người/tháng.",
+      "130 kwh/người/tháng.",
+      "140 kwh/người/tháng."
+    ]
+  },
+  {
+    "prompt": "Theo thông tư số 36/2023/TT-BQP ngày 29/5/2023 của Bộ trưởng Bộ Quốc phòng nội dung thứ 4 trong thực hiện phong trào thi đua Ngành Doanh trại là nội dung nào?",
+    "id": "135",
+    "correct": 1,
+    "options": [
+      "Tổ chức quản lý đầu tư xây dựng, sửa chữa, bảo trì công trình doanh trại theo quy định của Nhà nước và Bộ Quốc phòng.",
+      "Quản lý sử dụng điện, nước an toàn, tiết kiệm, hiệu quả.",
+      "Quản lý sử dụng tốt doanh cụ, dụng cụ sinh hoạt; bảo đảm thống nhất về chất lượng, quy cách."
+    ]
+  },
+  {
+    "prompt": "Đồng chí cho biết nội dung PTTĐ \"Quản lý, sử dụng xăng dầu an toàn, tiết kiệm, hiệu quả\" có mấy nội dung?",
+    "id": "136",
+    "correct": 1,
+    "options": [
+      "3 nội dung.",
+      "4 nội dung.",
+      "5 nội dung."
+    ]
+  },
+  {
+    "prompt": "Đồng chí cho biết Thông tư số 59/2015/TT-BQP về việc “ban hành Định mức hao hụt, tiêu thụ, tiêu hao xăng dầu trong quân đội” ban hành ngày tháng năm nào?",
+    "id": "137",
+    "correct": 1,
+    "options": [
+      "06/7/2015.",
+      "13/7/2015.",
+      "18/7/2015."
+    ]
+  },
+  {
+    "prompt": "Đồng chí cho biết Thông tư số 84/2014/TT-BQP về việc “ban hành Chế độ thống kê, thanh quyết toán xăng dầu trong quân đội” ban hành ngày tháng năm nào?",
+    "id": "138",
+    "correct": 0,
+    "options": [
+      "02/7/2015.",
+      "12/7/2015.",
+      "22/7/2015."
+    ]
+  },
+  {
+    "prompt": "Đồng chí cho biết Thông tư số 84/2014/TT-BQP quy định việc “Lưu trữ tài liệu thống kê cấp Trung đoàn và tương đương trở xuống” lưu trữ bao nhiêu năm?",
+    "id": "139",
+    "correct": 1,
+    "options": [
+      "5 năm.",
+      "10 năm.",
+      "15 năm."
+    ]
+  },
+  {
+    "prompt": "Đồng chí cho biết Thông tư số 84/2014/TT-BQP quy định việc “Lưu trữ tài liệu thống kê cấp Sư đoàn và tương đương trở xuống” lưu trữ bao nhiêu năm?",
+    "id": "140",
+    "correct": 1,
+    "options": [
+      "5 năm.",
+      "10 năm.",
+      "15 năm."
+    ]
+  },
+  {
+    "prompt": "Đồng chí cho biết nội dung “Quản lý chặt chẽ, sử dụng đúng mục đích nhiệm vụ được giaoˮ trong PTTĐ \"Quản lý, sử dụng xăng dầu an toàn, tiết kiệm, hiệu quả\" có mấy nội dung?",
+    "id": "141",
+    "correct": 1,
+    "options": [
+      "4 nội dung.",
+      "5 nội dung.",
+      "6 nội dung."
+    ]
+  },
+  {
+    "prompt": "Đồng chí cho biết nội dung “Xây dựng ngành chính quy, vững mạnhˮ trong PTTĐ \"Quản lý, sử dụng xăng dầu an toàn, tiết kiệm, hiệu quả\" có mấy nội dung?",
+    "id": "142",
+    "correct": 0,
+    "options": [
+      "4 nội dung.",
+      "5 nội dung.",
+      "6 nội dung."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệnh quản lý bộ đội QĐNDVN - năm 2026, quy định thời gian thực hiện chế độ bảo quản hằng ngày như thế nào?",
+    "id": "143",
+    "correct": 1,
+    "options": [
+      "Hàng ngày: Vũ khí bộ binh bảo quản 15 phút; vũ khí, trang bị kỹ thuật quân binh chủng khác bảo quản 30 phút; thời gian bảo quản vào giờ thứ 8.",
+      "Hàng ngày: Vũ khí bộ binh bảo quản 15 - 20 phút; vũ khí, trang bị kỹ thuật quân binh chủng khác bảo quản 20 - 30 phút; thời gian bảo quản vào giờ thứ 8.",
+      "Hàng ngày: Vũ khí bộ binh bảo quản 15 phút; vũ khí, trang bị kỹ thuật quân binh chủng khác bảo quản 40 phút; thời gian bảo quản vào giờ thứ 8."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệnh quản lý bộ đội QĐNDVN - năm 2026, quy định thời gian thực hiện chế độ bảo quản hằng tuần như thế nào?",
+    "id": "144",
+    "correct": 0,
+    "options": [
+      "Hàng tuần: Vũ khí bộ binh bảo quản 30 phút; vũ khí trang bị kỹ thuật phức tạp bảo quản ½ ngày; thời gian bảo quản vào ngày làm việc cuối tuần.",
+      "Hàng tuần: Vũ khí bộ binh bảo quản 40 phút; vũ khí trang bị kỹ thuật phức tạp bảo quản ½ ngày; thời gian bảo quản vào ngày làm việc cuối tuần.",
+      "Hàng tuần: Vũ khí bộ binh bảo quản 40 phút; vũ khí trang bị kỹ thuật phức tạp bảo quản 01 ngày; thời gian bảo quản vào ngày làm việc cuối tuần."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệnh quản lý bộ đội QĐNDVN - năm 2026, trách nhiệm quản lý VKTBKT của chỉ huy các cấp gồm bao nhiêu nội dung?",
+    "id": "145",
+    "correct": 1,
+    "options": [
+      "3 nội dung.",
+      "4 nội dung.",
+      "5 nội dung."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệnh quản lý bộ đội QĐNDVN - năm 2026, quy định quân nhân thực hiện nhiệm vụ canh phòng chỉ được sử dụng vũ khí trong mấy trường hợp?",
+    "id": "146",
+    "correct": 0,
+    "options": [
+      "3 trường hợp.",
+      "4 trường hợp.",
+      "5 trường hợp."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệnh quản lý bộ đội QĐNDVN - năm 2026, quy định trách nhiệm quản lý VKTBKT của quân nhân gồm bao nhiêu nội dung?",
+    "id": "147",
+    "correct": 1,
+    "options": [
+      "2 nội dung.",
+      "3 nội dung.",
+      "4 nội dung."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệnh quản lý bộ đội QĐNDVN - năm 2026, quy định nội dung cấm sử dụng VKTBKT trong những trường hợp nào?",
+    "id": "148",
+    "correct": 2,
+    "options": [
+      "Cấm sử dụng VKTBKT làm việc không đúng với nhiệm vụ của đơn vị, trái quy định của ngành chuyên môn kỹ thuật.",
+      "Cấm sử dụng VKTBKT làm việc không đúng với tính, năng tác dụng của chúng, trái quy định của ngành chuyên môn kỹ thuật.",
+      "Cấm sử dụng VKTBKT không đúng với tính năng, tác dụng; không đúng với nhiệm vụ, trái quy định của ngành chuyên môn kỹ thuật."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệnh quản lý bộ đội QĐNDVN - năm 2026, chế độ kiểm tra đối với Tiểu đoàn trưởng và tương đương là?",
+    "id": "149",
+    "correct": 0,
+    "options": [
+      "Tiểu đoàn trưởng và tương đương mỗi tháng phải kiểm tra ít nhất một đại đội và một trung đội trực thuộc.",
+      "Tiểu đoàn trưởng và tương đương mỗi tháng phải kiểm tra ít nhất hai đại đội và một trung đội trực thuộc.",
+      "Tiểu đoàn trưởng và tương đương mỗi tháng phải kiểm tra ít nhất ba đại đội và một trung đội trực thuộc."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệnh quản lý bộ đội QĐNDVN - năm 2026, chế độ kiểm tra đối với Đại đội trưởng và tương đương là?",
+    "id": "150",
+    "correct": 0,
+    "options": [
+      "Đại đội trưởng và tương đương mỗi tuần phải kiểm tra ít nhất 01 Trung đội.",
+      "Đại đội trưởng và tương đương mỗi tuần kiểm tra ít nhất 02 Trung đội.",
+      "Đại đội trưởng và tương đương hai tuần kiểm tra ít nhất 01 Trung đội."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệnh quản lý bộ đội QĐNDVN - năm 2026, chế độ kiểm tra đối với Trung đội trưởng và tương đương là?",
+    "id": "151",
+    "correct": 1,
+    "options": [
+      "Trung đội trưởng và tương đương một ngày phải kiểm tra ít nhất 1 Tiểu đội.",
+      "Trung đội trưởng và tương đương hai ngày phải kiểm tra ít nhất 1 Tiểu đội.",
+      "Trung đội trưởng và tương đương ba ngày phải kiểm tra ít nhất 1 Tiểu đội."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệnh quản lý bộ đội QĐNDVN - năm 2026, chế độ kiểm tra đối với Tiểu đội trưởng và tương đương là?",
+    "id": "152",
+    "correct": 2,
+    "options": [
+      "Tiểu đội trưởng và tương đương kiểm tra 2 ngày 1 lần.",
+      "Tiểu đội trưởng và tương đương kiểm tra 3 ngày 1 lần.",
+      "Tiểu đội trưởng và tương đương phải kiểm tra hằng ngày."
+    ]
+  },
+  {
+    "prompt": "Theo chỉ thị số 33/CT-TM của Tổng tham Mưu trưởng khi làm nhiệm vụ canh phòng bảo vệ các mục tiêu (Sở chỉ huy, kho tàng, doanh trại…) đối với súng ngắn, mỗi khẩu được lắp bao nhiêu viên đạn vào hộp tiếp đạn để trong bao đạn đeo vào người (không lắp vào súng)?",
+    "id": "153",
+    "correct": 2,
+    "options": [
+      "04 viên.",
+      "05 viên.",
+      "06 viên."
+    ]
+  },
+  {
+    "prompt": "Theo chỉ thị số 33/CT-TM của Tổng tham Mưu trưởng khi làm nhiệm vụ canh phòng bảo vệ các mục tiêu (Sở chỉ huy, kho tàng, doanh trại…) đối với súng Tiểu liên, mỗi khẩu được lắp bao nhiêu viên đạn vào hộp tiếp đạn để trong bao đạn đeo vào người (không lắp vào súng)?",
+    "id": "154",
+    "correct": 0,
+    "options": [
+      "10 viên.",
+      "20 viên.",
+      "30 viên."
+    ]
+  },
+  {
+    "prompt": "Chỉ thị 33/CT-TM của Tổng tham Mưu trưởng quy định các đơn vị huấn luyện chiến sỹ mới được trang bị bao nhiêu loại đạn?",
+    "id": "155",
+    "correct": 1,
+    "options": [
+      "Trang bị tất các loại đạn theo súng.",
+      "Không được trang bị đạn.",
+      "Trang bị đạn súng tiểu liên."
+    ]
+  },
+  {
+    "prompt": "Chỉ thị 33/CT-TM của Tổng tham Mưu được ban hành vào ngày tháng năm nào?",
+    "id": "156",
+    "correct": 2,
+    "options": [
+      "Ngày 21/9/2009.",
+      "Ngày 22/9/2009.",
+      "Ngày 23/9/2009."
+    ]
+  },
+  {
+    "prompt": "Chỉ thị 33/CT-TM của Tổng tham Mưu trưởng quy định về nội dung gì?",
+    "id": "157",
+    "correct": 1,
+    "options": [
+      "Chỉ thị về việc quản lý vũ khí, đạn sẵn sàng chiến đấu.",
+      "Chỉ thị về việc quản lý, sử dụng vũ khí, đạn sẵn sàng chiến đấu.",
+      "Chỉ thị về việc quản lý sử dụng đạn sẵn sàng chiến đấu."
+    ]
+  },
+  {
+    "prompt": "Theo chỉ thị số 33/CT-TM ngày 22/9/2009, các trường hợp đi công tác lẻ thật đặc biệt (dẫn giải phạm nhân, tài chính đi nhận tiền, bảo vệ các đồng chí lãnh đạo..) nếu được phép mang theo vũ khí, đạn phải có giấy chứng nhận của chỉ huy đơn vị từ cấp nào?",
+    "id": "158",
+    "correct": 0,
+    "options": [
+      "Trung đoàn và tương đương trở lên.",
+      "Sư đoàn và tương đương trở lên.",
+      "Tư lệnh Quân khu."
+    ]
+  },
+  {
+    "prompt": "Theo chỉ thị số 33/CT-TM ngày 22/9/2009,khi làm nhiệm vụ canh phòng bảo vệ các mục tiêu (Sở chỉ huy, kho tàng, doanh trại…) đối với súng ngắn, mỗi khẩu được lắp bao nhiêu viên đạn vào hộp tiếp đạn để trong bao đạn đeo vào người (không lắp vào súng)?",
+    "id": "159",
+    "correct": 2,
+    "options": [
+      "03 viên.",
+      "04 viên.",
+      "06 viên."
+    ]
+  },
+  {
+    "prompt": "Chỉ thị 33/CT-TM ngày 22/9/2009 thay thế cho Chỉ thị nào?",
+    "id": "160",
+    "correct": 2,
+    "options": [
+      "Chỉ thị số 17/CT-TM, ngày 22/5/2006.",
+      "Chỉ thị số 38/CT-TM, ngày 22/11/2006.",
+      "Chỉ thị số 18/CT-TM, ngày 22/5/2006."
+    ]
+  },
+  {
+    "prompt": "Quy định đối với tủ súng bộ binh tiểu đội?",
+    "id": "161",
+    "correct": 1,
+    "options": [
+      "Phải được khóa bằng 2 khóa cầu ngang, chỉ huy trung đội giữ 1 chìa khóa, nhân viên Quân khí giữ 1 chìa khóa, số chìa khóa còn lại lưu tại bảo mật đơn vị.",
+      "Tủ súng tiểu đội được khóa chắc chắn bằng 02 khóa ngoài, loại khóa cầu ngang; trung đội trưởng giữ 01 chìa khóa của 01 khóa; chỉ huy đại đội (hoặc người được đại đội trưởng giao nhưng phải 2 người riêng biệt) giữ 01 chìa khóa của khóa còn lại; số chìa khóa còn lại được lưu tại bảo mật đơn vị.",
+      "Phải được khóa bằng 3 khóa cầu ngang, chỉ huy trung đội giữ 1 chìa khóa , nhân viên Quân khí giữ 1 chìa khóa , số chìa khóa còn lại lưu tại bảo mật đơn vị."
+    ]
+  },
+  {
+    "prompt": "Quy định đối với tủ súng bộ binh trung đội (Loại tủ có 2 cửa)?",
+    "id": "162",
+    "correct": 1,
+    "options": [
+      "Phải được khóa bằng 4 khóa cầu ngang; chỉ huy trung đội giữ 1 chìa khóa của 1 khóa, nhân viên Quân khí giữ 1 chìa khóa của khóa còn lại, số chìa khóa còn lại lưu tại bảo mật đơn vị.",
+      "Tủ súng trung đội được khóa chắc chắn bằng 04 khóa ngoài, loại khóa cầu ngang; khóa của mỗi cửa tủ súng: trung đội trưởng giữ 02 chìa khóa của 02 khóa của 2 bên tủ; chỉ huy đại đội (hoặc người được đại đội trưởng giao nhưng phải 2 người riêng biệt) giữ 02 chìa khóa của 02 khóa còn lại; số chìa khóa còn lại được lưu tại bảo mật đơn vị. Chìa khóa dây khóa vòng cò do trung đội trưởng giữ.",
+      "Phải được khóa bằng 4 khóa cầu ngang (mỗi cửa tủ súng phải có 2 khóa); khóa của mỗi cửa tủ súng: chỉ huy trung đội giữ 1 chìa khóa, nhân viên Quân khí giữ 1 chìa khóa, số chìa khóa còn lại lưu tại bảo mật đơn vị."
+    ]
+  },
+  {
+    "prompt": "Hướng dẫn 2122/HD-QK của Cục Quân khí được ban hành vào ngày, tháng, năm nào?",
+    "id": "163",
+    "correct": 1,
+    "options": [
+      "10/5/2017.",
+      "12/6/2017.",
+      "14/6/2017."
+    ]
+  },
+  {
+    "prompt": "Hướng dẫn 2122/HD-QK của Cục Quân khí quy định biển tên tủ súng có chữ màu gì?",
+    "id": "164",
+    "correct": 1,
+    "options": [
+      "Nền vàng, chữ đỏ, viền vàng.",
+      "Nền đỏ, chữ vàng, viền vàng.",
+      "Nền đỏ, chữ vàng, viền trắng."
+    ]
+  },
+  {
+    "prompt": "Hướng dẫn 2122/HD-QK của Cục Quân khí quy định chìa khóa vòng cò súng do ai giữ?",
+    "id": "165",
+    "correct": 2,
+    "options": [
+      "Đại đội trưởng.",
+      "Nhân viên Quân khí.",
+      "Trung đội trưởng."
+    ]
+  },
+  {
+    "prompt": "Hướng dẫn 2122/HD-QK của Cục Quân khí quy định bảng đăng ký biên chế vũ khí cá nhân?",
+    "id": "166",
+    "correct": 1,
+    "options": [
+      "Được làm trên khổ giấy A4 dọc, dán ở phía trong cánh tủ bên phải theo hướng đứng từ ngoài nhìn vào tủ súng; mép trên của bảng cách mép trên của cánh tủ 10cm và nằm chính giữa cánh tủ súng.",
+      "Được làm trên khổ giấy A4 dọc, dán ở phía trong cánh tủ bên phải theo hướng đứng từ ngoài nhìn vào tủ súng; mép trên của bảng cách mép trên của cánh tủ 05cm và nằm chính giữa cánh tủ súng.",
+      "Được làm trên khổ giấy A4 dọc, dán ở phía trong cánh tủ bên trái theo hướng đứng từ ngoài nhìn vào tủ súng; mép trên của bảng cách mép trên của cánh tủ 10cm và nằm chính giữa cánh tủ súng."
+    ]
+  },
+  {
+    "prompt": "Hướng dẫn 2122/HD-QK của Cục Quân khí quy định sơ đồ sắp xếp vũ khí trang bị kỹ thuật trong từng tủ súng?",
+    "id": "167",
+    "correct": 1,
+    "options": [
+      "Được vẽ trên khổ giấy A4 ngang, dán ngang ở phía trong cánh tủ bên phải, phía dưới, chính giữa, cách bảng đăng kí biên chế vũ khí trang bị kỹ thuật cá nhân 05 cm.",
+      "Được vẽ trên khổ giấy A4 ngang, dán ngang ở phía trong cánh tủ bên phải, phía dưới, chính giữa, cách bảng đăng kí biên chế vũ khí trang bị kỹ thuật cá nhân 10 cm.",
+      "Được vẽ trên khổ giấy A4 dọc, dán ở phía trong cánh tủ bên phải, phía dưới, chính giữa, cách bảng đăng kí biên chế vũ khí trang bị kỹ thuật cá nhân 05 cm."
+    ]
+  },
+  {
+    "prompt": "Hướng dẫn 2122/HD-QK của Cục Quân khí quy định tem súng?",
+    "id": "168",
+    "correct": 0,
+    "options": [
+      "Tem nền trắng, chữ đen.",
+      "Tem nền trắng, chữ đen, viền vàng.",
+      "Tem nền trắng, chữ đen, viền trắng."
+    ]
+  },
+  {
+    "prompt": "Hướng dẫn 2122/HD-QK của Cục Quân khí quy định tủ súng tiểu đội, mỗi ngăn của tủ súng Trung đội có?",
+    "id": "169",
+    "correct": 1,
+    "options": [
+      "01 bảng đăng ký biên chế vũ khí cá nhân",
+      "01 bảng đăng ký biên chế vũ khí cá nhân, 01 bản hướng dẫn những quy định an toàn.",
+      "01 bảng đăng ký biên chế vũ khí cá nhân, 01 sơ đồ sắp xếp VKTB."
+    ]
+  },
+  {
+    "prompt": "Chỉ thị số 456/CT-QK ngày 28/01/2026 của Tư lệnh Quân khu về thực hiện công tác bảo đảm trật tự, an toàn giao thông năm 2026 có mấy nội dung?",
+    "id": "170",
+    "correct": 0,
+    "options": [
+      "7 nhiệm vụ và giải pháp trọng tâm.",
+      "8 nhiệm vụ và giải pháp trọng tâm.",
+      "9 nhiệm vụ và giải pháp trọng tâm."
+    ]
+  },
+  {
+    "prompt": "Tinh thần an toàn giao thông theo Chỉ thị số 456/CT-QK ngày 28/01/2026 của Tư lệnh Quân khu về thực hiện công tác bảo đảm trật tự, an toàn giao thông năm 2026 là?",
+    "id": "171",
+    "correct": 1,
+    "options": [
+      "Ra khỏi nhà và trở về bình yên.",
+      "Tăng cường công tác quản lý, chấp hành pháp luật, kỷ luật Quân đội để xây dựng văn hóa giao thông an toàn.",
+      "Hành trình an toàn, kiến tạo tương lai."
+    ]
+  },
+  {
+    "prompt": "Chủ đề an toàn giao thông năm 2026 là?",
+    "id": "172",
+    "correct": 1,
+    "options": [
+      "Ra khỏi nhà và trở về bình yên.",
+      "Tăng cường công tác quản lý, chấp hành pháp luật, kỷ luật Quân đội để xây dựng văn hóa giao thông an toàn",
+      "Hành trình an toàn, kiến tạo tương lai"
+    ]
+  },
+  {
+    "prompt": "Nghị định số 238/2026/NĐ-CP ngày 26/6/2026 của Chính phủ về sửa đổi, bổ sung một số điều của Nghị định số 168/2024/NĐ-CP ngày 26/12/2024 của Chính phủ quy định xử phát vi phạm hành chính về trật tự, an toàn giao thông trong lĩnh vực giao thông đường bộ; trừ điểm, phục hồi điểm giấy phép lái xe có hiệu lực thi hành từ ngày, tháng, năm nào?",
+    "id": "173",
+    "correct": null,
+    "options": [
+      "01/7/2026.",
+      "30/7/2026.",
+      "15/8/2026."
+    ]
+  },
+  {
+    "prompt": "Nội dung Nghị định số 238/2026/NĐ-CP ngày 26/6/2026 của Chính phủ về sửa đổi, bổ sung một số điều của Nghị định số 168/2024/NĐ-CP ngày 26/12/2024 của Chính phủ quy định xử phát vi phạm hành chính về trật tự, an toàn giao thông trong lĩnh vực giao thông đường bộ; trừ điểm, phục hồi điểm giấy phép lái xe gồm bao nhiêu chương, bao nhiêu điều",
+    "id": "174",
+    "correct": 0,
+    "options": [
+      "02 chương, 21 điều.",
+      "03 chương, 22 điều.",
+      "04 chương, 23 điều."
+    ]
+  },
+  {
+    "prompt": "Theo quy định, khi tham gia giao thông đường bộ ngoại tỉnh, người lái phưng tiện quân sự phải mang theo các giấy tờ gì?",
+    "id": "175",
+    "correct": 1,
+    "options": [
+      "Kế hoạch xe, lệnh điều phương tiện, giấy chứng nhận đăng ký xe; giấy phép lái xe phù hợp với loại xe đang điều khiển; giấy công tác xe.",
+      "Kế hoạch xe, lệnh điều phương tiện, giấy chứng nhận đăng ký xe; giấy phép lái xe phù hợp với loại xe đang điều khiển; giấy công tác xe, giấy công tác, giấy giới thiệu.",
+      "Kế hoạch xe, lệnh điều phương tiện, giấy chứng nhận đăng ký xe; giấy phép lái xe phù hợp với loại xe đang điều khiển."
+    ]
+  },
+  {
+    "prompt": "Người lái xe quân sự khi tham gia giao thông đường bộ phải đảm bảo các điều kiện nào dưới đây?",
+    "id": "176",
+    "correct": 2,
+    "options": [
+      "Phải đủ tuổi, có phẩm chất đạo đức của người lái xe và sức khỏe tâm lý tốt; có giấy phép lái xe đang còn điểm, còn hiệu lực phù hợp với loại xe đang điều khiển do cơ quan có thẩm quyền trong quân đội cấp, chấp hành nghiêm các quy định về trật tự an toàn giao thông.",
+      "Phải là người đứng tên trong đăng ký xe.",
+      "Cả hai ý trên."
+    ]
+  },
+  {
+    "prompt": "Theo điều lệ công tác kỹ thuật xe-máy, phân cấp chất lượng xe-máy có bao nhiêu cấp chất lượng?",
+    "id": "177",
+    "correct": 2,
+    "options": [
+      "3 cấp chất lượng",
+      "4 cấp chất lượng",
+      "5 cấp chất lượng"
+    ]
+  },
+  {
+    "prompt": "Trên đường bộ (trừ đường cao tốc) trong khu vực đông dân cư; đường hai chiều; đường đôi, đường một chiều có từ hai làn xe cơ giới trở lên; các loại xe cơ giới (trừ xe máy chuyên dùng, xe gắn máy và các loại xe tưong tự) tham gia giao thông tốc độ tối đa cho phép là bao nhiêu km/h?",
+    "id": "178",
+    "correct": 0,
+    "options": [
+      "60 km/h.",
+      "50 km/h.",
+      "40 km/h"
+    ]
+  },
+  {
+    "prompt": "Trên đường bộ (trừ đường cao tốc) trong khu vực đông dân cư; đường hai chiều; đường một chiều có một làn xe cơ giới, các loại xe cơ giới (trừ xe máy chuyên dùng, xe gắn máy và các loại xe tưong tự) tham gia giao thông tốc độ tối đa cho phép là bao nhiêu km/h?",
+    "id": "179",
+    "correct": 2,
+    "options": [
+      "30 km/h.",
+      "40 km/h.",
+      "50 km/h."
+    ]
+  },
+  {
+    "prompt": "Trên đường bộ (trừ đường cao tốc) ngoài khu vực đông dân cư; đường đôi, đường một chiều có từ hai làn xe cơ giới trở lên, loại xe nào dưới đây tham gia giao thông tốc độ tối đa cho phép là 70 km/h?",
+    "id": "180",
+    "correct": 1,
+    "options": [
+      "Xe ô tô chở người trên 28 chỗ không kể chỗ người lái xe (trừ xe buýt); ô tô tải có trọng tải trên 3,5 tấn (trừ ô tô xi téc).",
+      "Xe buýt; ô tô đầu kéo kéo sơ mi rơ moóc (trừ ô tô đầu kéo kéo sơ mi rơ moóc xi téc); xe mô tô; ô tô chuyên dùng (trừ ô tô trộn vữa, ô tô trộn bê tông lưu động).",
+      "Ô tô kéo rơ moóc; ô tô kéo xe khác; ô tô trộn vữa, ô tô trộn bê tông lưu động, ô tô xi téc, ô tô đầu kéo kéo sơ mi rơ moóc xi téc, ô tô kéo theo rơ moóc xi téc."
+    ]
+  },
+  {
+    "prompt": "Câu 172: Trên đường bộ (trừ đường cao tốc) ngoài khu vực đông dân cư; đường hai chiều, đường một chiều có 1 làn xe cơ giới; loại xe nào dưới đây tham gia giao thông tốc độ tối đa cho phép là 60 km/h?",
+    "id": "181",
+    "correct": 0,
+    "options": [
+      "Xe ô tô chở người trên 28 chỗ không kể chỗ người lái xe (trừ xe buýt); ô tô tải có trọng tải trên 3,5 tấn (trừ ô tô xi téc).",
+      "Xe buýt; ô tô đầu kéo kéo sơ mi rơ moóc (trừ ô tô đầu kéo kéo sơ mi rơ moóc xi téc); xe mô tô; ô tô chuyên dùng (trừ ô tô trộn vữa, ô tô trộn bê tông lưu động).",
+      "Ô tô kéo rơ moóc; ô tô kéo xe khác; ô tô trộn vữa, ô tô trộn bê tông lưu động, ô tô xi téc, ô tô đầu kéo kéo sơ mi rơ moóc xi téc, ô tô kéo theo rơ moóc xi téc."
+    ]
+  },
+  {
+    "prompt": "Người lái xe phải giữ khoảng cách an toàn với xe đang chạy liền trước cùng làn hoặc cùng phần đường, cùng chiều xe của mình; (khi điều kiện trên đường đảm bảo theo quy định) ứng với tốc độ xe chạy trên 60 đến 80 km/h là bao nhiêu mét?",
+    "id": "182",
+    "correct": 0,
+    "options": [
+      "35m.",
+      "55m.",
+      "70 m."
+    ]
+  },
+  {
+    "prompt": "Người lái xe phải giữ khoảng cách an toàn với xe đang chạy liền trước cùng làn hoặc cùng phần đường, cùng chiều xe của mình; (khi điều kiện trên đường đảm bảo theo quy định)ứng với tốc độ xe chạy trên 80 đến 100 km/h là bao nhiêu mét?",
+    "id": "183",
+    "correct": 1,
+    "options": [
+      "35m.",
+      "55m.",
+      "70 m."
+    ]
+  },
+  {
+    "prompt": "Người có văn hóa giao thông khi lái xe phải đảm bảo các điều kiện gì?",
+    "id": "184",
+    "correct": 2,
+    "options": [
+      "Có giấy phép lái xe phù hợp với loại xe được phép điều khiển, xe cơ giới đảm bảo các quy định về chất lượng, an toàn kỹ thuật và bảo vệ môi trường.",
+      "Có giấy chứng nhận bảo hiểm trách nhiệm dân sự của chủ xe cơ giới còn hiệu lực, nộp phí sử dụng đường bộ theo quy định.",
+      "Cả ý a và ý b."
+    ]
+  },
+  {
+    "prompt": "Người lái xe và người có mặt tại hiện trường vụ tai nạn, phải làm gì dưới đây là có văn hóa giao thông?",
+    "id": "185",
+    "correct": 2,
+    "options": [
+      "Đặt biển cảnh báo hoặc vật báo hiệu ở phía trước và phía sau hiện trường xảy ra tai nạn để cảnh báo, kiểm tra khả năng xảy ra hỏa hoạn do nhiên liệu bị rò rỉ, bảo vệ hiện trường vụ tai nạn và cấp cứu người bị thương.",
+      "Đặt các biển cảnh báo hoặc vật báo hiệu ở phía trên nóc xe xảy ra tai nạn để cảnh báo, kiểm tra khả năng xảy ra mất an toàn do nước làm mát bị rò rỉ, di chuyển hiện trường vụ tai nạn để giao thông thông suốt.",
+      "Cả ý a và ý b."
+    ]
+  },
+  {
+    "prompt": "Trong các hành vi dưới đây, người lái xe có văn hóa giao thông phải ứng xử như thế nào?",
+    "id": "186",
+    "correct": 0,
+    "options": [
+      "Điều khiển xe đi bên phải theo chiều đi của mình, đi đúng phần đường, làn đường quy định, đội mũ bảo hiểm đúng quy cách.",
+      "Điều khiển xe đi trên phần đường, làn đường có ít phương tiện tham gia giao thông.",
+      "Đội mũ bảo hiểm ở nơi có biển báo bắt buộc đội mũ bảo hiểm."
+    ]
+  },
+  {
+    "prompt": "Hành vi nào dưới đây của người lái xe bị nghiêm cấm?",
+    "id": "187",
+    "correct": 2,
+    "options": [
+      "Điều khiển phương tiện giao thông mà trong máu hoặc hơi thở có nồng độ cồn.",
+      "Cung cấp thông tin không chính xác, sai sự thật về ảnh hưởng của rượu, bia đối với sức khỏe, công việc của người lái xe.",
+      "Cả hai ý trên"
+    ]
+  },
+  {
+    "prompt": "Người có giấy phép lái xe hạng A được lái loại xe nào?",
+    "id": "188",
+    "correct": 0,
+    "options": [
+      "Lái xe mô tô hai bánh có dung tích xi-lanh  trên 125 cm3 hoặc có công suất động cơ điện trên 11 kW và các loại xe quy định cho giấy phép lái xe hạng A1.",
+      "Lái xe mô tô ba bánh và các loại xe quy định cho giấy phép lái xe hạng A1."
+    ]
+  },
+  {
+    "prompt": "Người có giấy phép lái xe hạng A1 được lái loại xe nào?",
+    "id": "189",
+    "correct": 0,
+    "options": [
+      "Lái xe mô tô hai bánh có dung tích xi-lanh đến 125 cm3 hoặc có công suất động cơ điện đến 11 kW.",
+      "Lái xe mô tô hai bánh có dung tích xi-lanh  trên 125 cm3 hoặc có công suất động cơ điện trên 11 kW và các loại xe quy định cho giấy phép lái xe hạng A1."
+    ]
+  },
+  {
+    "prompt": "Người có giấy phép lái xe hạng B được lái loại xe nào?",
+    "id": "190",
+    "correct": 0,
+    "options": [
+      "Lái xe ô tô chở người đến 08 chỗ (không kể chỗ của người lái xe); xe ô tô tải và ô tô chuyên dùng có khối lượng toàn bộ theo thiết kế đến 3.500 kg; các loại xe ô tô quy định cho giấy phép lái xe hạng B kéo rơ moóc có khối lượng toàn bộ theo thiết kế đến 750 kg.",
+      "Lái xe ô tô tải và ô tô chuyên dùng có khối lượng toàn bộ theo thiết kế trên 3.500 kg đến 7.500 kg; các loại xe ô tô tải quy định cho giấy phép lái xe hạng C1 kéo rơ moóc có khối lượng toàn bộ theo thiết kế đến 750 kg; các loại xe quy định cho giấy phép lái xe hạng B."
+    ]
+  },
+  {
+    "prompt": "Người lái xe không được vượt xe khác khi gặp trường hợp nào dưới đây?",
+    "id": "191",
+    "correct": 0,
+    "options": [
+      "Trên cầu hẹp có một làn đường; nơi đường giao nhau, đường bộ giao nhau cùng mức với đường sắt; khi gặp xe ưu tiên.",
+      "Trên cầu có từ 02 làn xe trở lên.",
+      "Trên đường có 02 làn đường được phân chia làn bằng vạch kẻ nét đứt."
+    ]
+  },
+  {
+    "prompt": "Khi tới đường ngang không có người gác, chắn đường bộ, chuông, đèn tín hiệu, người tham gia giao thông đường bộ phải làm gì để bảo đảm an toàn?",
+    "id": "192",
+    "correct": 0,
+    "options": [
+      "Dừng lại về bên phải đường của mình, trước vạch dừng xe và quan sát hai phía, khi không có phương tiện giao thông đường sắt tới mới được đi qua.",
+      "Quan sát hai phía, khi không có phương tiện giao thông đường sắt tới thì nhanh chóng đi qua.",
+      "Dừng lại khoảng cách tối thiểu 3 mét tính từ ray đường sắt gần nhất, khi không có phương tiện giao thông đường sắt tới thì nhanh chóng đi qua."
+    ]
+  },
+  {
+    "prompt": "Tại nơi đường giao nhau, người lái xe đang đi trên đường không ưu tiên, đường nhánh phải nhường đường như thế nào là đúng quy tắc giao thông?",
+    "id": "193",
+    "correct": 2,
+    "options": [
+      "Nhường đường cho xe đi ở bên phải mình tới.",
+      "Nhường đường cho xe đi ở bên trái mình tới.",
+      "Nhường đường cho xe đi trên đường ưu tiên hoặc đường chính từ bất kỳ hướng nào tới."
+    ]
+  },
+  {
+    "prompt": "Khi điều khiển xe chạy trên đường, biết có xe sau xin vượt, nếu đủ điều kiện an toàn người điều khiển phương tiện phải làm gì?",
+    "id": "194",
+    "correct": null,
+    "options": [
+      "Tăng tốc độ và ra hiệu cho xe sau vượt, không được gây trở ngại cho xe xin vượt.",
+      "Giảm tốc độ, có tín hiệu rẽ phải để báo hiệu cho người điều khiển phương tiện tham gia giao thông đường bộ phía sau biết được vượt và đi sát về bên phải của phần đường xe chạy cho đến khi xe sau đã vượt qua, không được cản trở đối với xe xin vượt.",
+      "Cho xe đi sát về bên trái của phần đường xe chạy và ra hiệu cho xe sau vượt, không được gây trở ngại cho xe xin vượt."
+    ]
+  },
+  {
+    "prompt": "Nghị định 168/2024/NĐ-CP ngày 26/12/2024 của Chính phủ, người điều khiển ô tô, xe tương tự ô tô mà trong máu hoặc hơi thở có nồng độ cồn nhưng chưa vượt quá 50 miligam/100 mililít máu hoặc chưa vượt quá 0,25 miligam/1 lít khí thở?",
+    "id": "195",
+    "correct": 1,
+    "options": [
+      "Phạt tiền từ 4.000.000 đồng đến 6.000.000 đồng.",
+      "Phạt tiền từ 6.000.000 đồng đến 8.000.000 đồng.",
+      "Phạt tiền từ 8.000.000 đồng đến 10.000.000 đồng."
+    ]
+  },
+  {
+    "prompt": "Nghị định 168/2024/NĐ-CP ngày 26/12/2024 của Chính phủ, người điều khiển ô tô, xe tương tự ô tô mà trong máu hoặc hơi thở có nồng độ cồn vượt quá 50 miligam đến 80 miligam/100 mililít máu hoặc vượt quá 0,25 miligam đến 0,4 miligam/1 lít khí thở?",
+    "id": "196",
+    "correct": 2,
+    "options": [
+      "Phạt tiền từ 14.000.000 đồng đến 16.000.000 đồng.",
+      "Phạt tiền từ 16.000.000 đồng đến 18.000.000 đồng.",
+      "Phạt tiền từ 18.000.000 đồng đến 20.000.000 đồng."
+    ]
+  },
+  {
+    "prompt": "Nghị định 168/2024/NĐ-CP ngày 26/12/2024 của Chính phủ, người điều khiển ô tô, xe tương tự ô tô chạy quá tốc độ quy định từ 10 km/h đến 20 km/h thì bị xử phạt như thế nào?",
+    "id": "197",
+    "correct": 2,
+    "options": [
+      "Phạt tiền từ 2.000.000 đồng đến 3.000.000 đồng.",
+      "Phạt tiền từ 3.000.000 đồng đến 4.000.000 đồng.",
+      "Phạt tiền từ 4.000.000 đồng đến 6.000.000 đồng."
+    ]
+  },
+  {
+    "prompt": "Nghị định 168/2024/NĐ-CP ngày 26/12/2024 của Chính phủ, người điều khiển ô tô, xe tương tự ô tô chạy quá tốc độ quy định từ 20 km/h đến 35 km/h thì bị xử phạt như thế nào?",
+    "id": "198",
+    "correct": 2,
+    "options": [
+      "Phạt tiền từ 3.000.000 đồng đến 4.000.000 đồng.",
+      "Phạt tiền từ 4.000.000 đồng đến 6.000.000 đồng.",
+      "Phạt tiền từ 6.000.000 đồng đến 8.000.000 đồng."
+    ]
+  },
+  {
+    "prompt": "Nghị định 168/2024/NĐ-CP ngày 26/12/2024 của Chính phủ, người điều khiển ô tô, xe tương tự ô tô chạy quá tốc độ quy định trên 35 km/h thì bị xử phạt như thế nào?",
+    "id": "199",
+    "correct": 1,
+    "options": [
+      "Phạt tiền từ 10.000.000 đồng đến 12.000.000 đồng.",
+      "Phạt tiền từ 12.000.000 đồng đến 14.000.000 đồng.",
+      "Phạt tiền từ 14.000.000 đồng đến 16.000.000 đồng."
+    ]
+  },
+  {
+    "prompt": "Nghị định 168/2024/NĐ-CP ngày 26/12/2024 của Chính phủ, người điều khiển ô tô không chấp hành hiệu lệnh của đèn tín hiệu giao thông (hoặc hiệu lệnh, hướng dẫn của người điều khiển giao thông hoặc người kiểm soát giao thông) thì bị xử phạt như thế nào?",
+    "id": "200",
+    "correct": 0,
+    "options": [
+      "Phạt tiền từ 4.000.000 đồng đến 6.000.000 đồng.",
+      "Phạt tiền từ 6.000.000 đồng đến 8.000.000 đồng.",
+      "Phạt tiền từ 5.000.000 đồng đến 7.0.000.000 đồng."
+    ]
+  }
+];
+const key = "trac-nghiem-hckt-2026-v1";
+const questions = bank;
+let mode = "exam";
+let answers = {}, current = 0, submitted = false, missingNotice = false;
+try {
+  if (localStorage.getItem(key + "-mode") === "practice") mode = "practice";
+} catch {}
+function loadProgress() {
+  answers = {};
+  current = 0;
+  submitted = false;
+  missingNotice = false;
+  try {
+    const saved = JSON.parse(localStorage.getItem(mode === "exam" ? key : key + "-practice"));
+    if (saved) ({answers, current, submitted} = saved);
+  } catch {}
+}
+function save() {
+  try {
+    localStorage.setItem(mode === "exam" ? key : key + "-practice", JSON.stringify({answers, current, submitted}));
+  } catch {}
+}
+function selectMode(nextMode) {
+  if (mode === nextMode) return;
+  mode = nextMode;
+  try {
+    localStorage.setItem(key + "-mode", mode);
+  } catch {}
+  loadProgress();
+  render();
+}
+function render(focus = false) {
+  const item = questions[current];
+  const practice = mode === "practice";
+  const selected = answers[current];
+  const reveal = submitted || (practice && selected !== undefined);
+  const answered = Object.keys(answers).length;
+  const graded = questions.filter(question => question.correct !== null).length;
+  const correct = questions.filter((question, index) => answers[index] === question.correct).length;
+  $("bank").textContent = questions.length + " câu hỏi";
+  $("practiceMode").setAttribute("aria-pressed", String(practice));
+  $("examMode").setAttribute("aria-pressed", String(!practice));
+  $("modeHint").textContent = practice
+    ? "Xem đáp án ngay sau mỗi lần chọn."
+    : "Bạn có thể đổi lựa chọn trước khi nộp. Đáp án hiện sau khi nộp bài.";
+  $("progressText").textContent = "Đã trả lời " + answered + "/" + questions.length + " câu";
+  $("progress").max = questions.length;
+  $("progress").value = answered;
+  $("jump").replaceChildren(...questions.map((question, index) =>
+    new Option((index + 1) + (answers[index] === undefined ? "" : " ✓"), index, false, index === current)));
+  $("prompt").textContent = "Câu " + item.id + ". " + item.prompt;
+  $("options").replaceChildren(...item.options.map((choice, index) => {
+    const label = document.createElement("label");
+    label.className = "option";
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "answer";
+    radio.checked = answers[current] === index;
+    radio.disabled = reveal;
+    radio.addEventListener("change", () => {
+      answers[current] = index;
+      save();
+      render();
+      if (practice) $("feedback").focus();
+      else $("options").querySelector("input:checked")?.focus();
+    });
+    const text = document.createElement("span");
+    text.textContent = String.fromCharCode(65 + index) + ". " + choice;
+    label.append(radio, text);
+    if (reveal && item.correct !== null && (item.correct === index || radio.checked)) {
+      const mark = document.createElement("span");
+      mark.className = "mark";
+      mark.textContent = item.correct === index ? "Đáp án đúng" : "Bạn chọn";
+      label.classList.add(item.correct === index ? "correct" : "wrong");
+      label.append(mark);
+    }
+    return label;
+  }));
+  $("previous").disabled = current === 0;
+  $("next").disabled = current === questions.length - 1;
+  $("submit").disabled = submitted;
+  $("submit").textContent = practice ? "Xem tổng điểm" : "Nộp bài";
+  $("feedback").textContent = reveal
+    ? item.correct === null
+      ? "Câu này chưa có đáp án trong đề gốc."
+      : practice && selected !== undefined
+        ? (selected === item.correct ? "Bạn trả lời đúng." : "Bạn trả lời sai. Đáp án đúng là " + String.fromCharCode(65 + item.correct) + ".")
+        : ""
+    : "";
+  $("result").textContent = submitted
+    ? "Kết quả · " + correct + "/" + graded + " câu đúng · " +
+      (correct * 10 / graded).toLocaleString("vi-VN", {maximumFractionDigits:2}) + "/10. " +
+      (questions.length - graded) + " câu chưa có đáp án trong đề gốc." +
+      (item.correct === null ? " Câu " + item.id + " không tính điểm." : "")
+    : missingNotice ? "Bạn còn " + (questions.length - answered) + " câu chưa trả lời." : "";
+  if (focus) $("prompt").focus();
+}
+function move(index) {
+  current = index;
+  save();
+  render(true);
+}
+function canReplace() {
+  return !Object.keys(answers).length && !submitted || confirm("Thao tác này sẽ xóa bài làm hiện tại. Bạn có muốn tiếp tục?");
+}
+$("practiceMode").onclick = () => selectMode("practice");
+$("examMode").onclick = () => selectMode("exam");
+$("previous").onclick = () => move(current - 1);
+$("next").onclick = () => move(current + 1);
+$("jump").onchange = event => move(Number(event.target.value));
+$("submit").onclick = () => {
+  const remaining = questions.length - Object.keys(answers).length;
+  if (remaining && !confirm("Còn " + remaining + " câu chưa trả lời. Bạn vẫn muốn kết thúc bài làm?")) {
+    missingNotice = true;
+    move(questions.findIndex((_, index) => answers[index] === undefined));
+    return;
+  }
+  missingNotice = false;
+  submitted = true;
+  save();
+  render();
+};
+$("reset").onclick = () => {
+  if (!canReplace()) return;
+  answers = {};
+  submitted = false;
+  missingNotice = false;
+  move(0);
+};
+loadProgress();
+render();
+</script>
+</html>
